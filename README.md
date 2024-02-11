@@ -26,9 +26,18 @@ python -m venv venv
 
 ### Install dependencies from requreiments.txt
 After setting up the virtual environment, use the package manager pip to install the project dependencies.
+
 ```bash
 # Ensure you have the latest version of pip
 pip install --upgrade pip
 
 # Install project dependencies from requirements.txt file
 pip install -r requirements.txt
+```
+
+### Run the code
+Please check `mst.sh` first to make sure everything is configured correctly. 
+
+```bash
+sbatch mst.sh
+```
