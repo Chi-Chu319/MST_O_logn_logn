@@ -1,6 +1,6 @@
 # MST O($\log \log {n}$)
 
-WIP
+Conference PaperPDF Available MST construction in O(log log n) communication rounds June 2003 DOI:10.1145/777412.777428
 
 ## Prerequisites
 
