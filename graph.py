@@ -27,7 +27,18 @@ class Graph:
         return WeightedEdge(j, weight), WeightedEdge(i, weight)
 
     def get_vertices(self):
-        return self.vertices, [len(vertex) for vertex in self.vertices]
+        count = [len(vertex) for vertex in self.vertices]
+
+        idx = 0
+        displacement = []
+        for degree in count:
+            displacement.append(idx)
+            idx += degree
+
+        return self.vertices, count, displacement
+
+
+class GraphLocal:
 
 
 # class GraphGenerator:

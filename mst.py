@@ -2,7 +2,7 @@ from mpi4py import MPI
 import numpy as np
 import sys
 from graph import Graph
-from utils.graph_utils import GraphUtils
+# from utils.graph_utils import GraphUtils
 
 # Initialize MPI
 comm = MPI.COMM_WORLD
@@ -22,25 +22,29 @@ if rank == 0:
         num_vertex_local=num_vertex_local
     )
     graph.generate()
-    vertices, degrees = graph.get_vertices()
+    vertices, count, displacement = graph.get_vertices()
 else:
-    vertices, degrees = None, None
+    vertices, count, displacement = None, None, None
 
+print("__________")
 if rank == 0:
-    for vertex in vertices:
-        print(f'Vertex: {vertex}')
+    for i, vertex in enumerate(vertices):
+        print(f'Vertex: {i}')
         for edge in vertex:
             print(edge)
+print("__________")
 
 vertices_partial = None
 # Scatter vertices and degrees
-comm.Scatterv(sendbuf=vertices, recvbuf=vertices_partial, root=0)
+comm.Scatterv(sendbuf=[vertices, tuple(count), tuple(displacement), MPI.LI], recvbuf=vertices_partial, root=0)
 
 print(f'rank: {rank}')
-for vertex in vertices_partial:
-    print(f'Vertex: {vertex}')
+for i, vertex in enumerate(vertices_partial):
+    print(f'Vertex: {i}')
     for edge in vertex:
         print(edge)
+    
+
 
 # [rank * num_vertex_local, (rank + 1) * num_vertex_local) 
 vertex_local_start = rank * num_vertex_local
