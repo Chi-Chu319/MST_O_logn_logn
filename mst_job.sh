@@ -8,4 +8,4 @@
 #SBATCH --output=vertex_generation.out
 #SBATCH --partition=small
 
-time srun python3 mst.py 2 2 10
+time srun python3 mst.py 5 3 10

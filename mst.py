@@ -22,19 +22,12 @@ if rank == 0:
     )
     graph.generate()
     sendbuf = graph.split()
-    print("__________")
-    print(graph)
-    print("__________")
 else:
     sendbuf = None
 
 graph_local = None
 # Scatter vertices and degrees
 graph_local = comm.scatter(sendobj=sendbuf, root=0)
-
-print(graph_local)
-    
-
 
 # [rank * num_vertex_local, (rank + 1) * num_vertex_local) 
 vertex_local_start = rank * num_vertex_local

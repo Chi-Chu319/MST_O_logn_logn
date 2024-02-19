@@ -17,13 +17,14 @@ class GraphLocal:
         self.num_vertex_local = num_vertex_local
         self.num_vertices = self.comm_size * self.num_vertex_local
         self.vertices = vertices
+        self.vertex_local_start = rank * num_vertex_local
 
     def __str__(self) -> str:
         result = f'rank: {self.rank}\n'
 
-        for i, vertex in enumerate(self.vertices):
-            result += f'Vertex: {i}, '
-            for edge in vertex:
+        for i, edges in enumerate(self.vertices):
+            result += f'Vertex: {i + self.vertex_local_start}\n'
+            for edge in edges:
                 result += f'{str(edge)}\n'
 
         return result
@@ -42,9 +43,11 @@ class Graph:
         self.vertices = [[] for _ in range(self.num_vertices)]
 
     def generate(self):
+        p = self.expected_degree / (self.num_vertices - 1)
+
         for i in range(self.num_vertices):
-            for j in range(self.num_vertices):
-                if i != j and self.rng.random() < (self.expected_degree / 2) / (self.num_vertices - 1):
+            for j in range(i + 1, self.num_vertices):
+                if self.rng.random() < p:
                     vertex_i, vertex_j = self.__generate_edges(i, j)
                     self.vertices[i].append(vertex_i)
                     self.vertices[j].append(vertex_j)
@@ -69,9 +72,9 @@ class Graph:
     def __str__(self) -> str:
         result = ""
 
-        for i, vertex in enumerate(self.vertices):
-            result += f'Vertex: {i}'
-            for edge in vertex:
+        for i, edges in enumerate(self.vertices):
+            result += f'Vertex: {i}\n'
+            for edge in edges:
                 result += f'{str(edge)}\n'
 
         return result
