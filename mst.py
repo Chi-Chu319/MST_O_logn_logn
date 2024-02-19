@@ -1,5 +1,4 @@
 from mpi4py import MPI
-import numpy as np
 import sys
 from graph import Graph
 # from utils.graph_utils import GraphUtils
@@ -22,27 +21,18 @@ if rank == 0:
         num_vertex_local=num_vertex_local
     )
     graph.generate()
-    vertices, count, displacement = graph.get_vertices()
+    sendbuf = graph.split()
+    print("__________")
+    print(graph)
+    print("__________")
 else:
-    vertices, count, displacement = None, None, None
+    sendbuf = None
 
-print("__________")
-if rank == 0:
-    for i, vertex in enumerate(vertices):
-        print(f'Vertex: {i}')
-        for edge in vertex:
-            print(edge)
-print("__________")
-
-vertices_partial = None
+graph_local = None
 # Scatter vertices and degrees
-comm.Scatterv(sendbuf=[vertices, tuple(count), tuple(displacement), MPI.LI], recvbuf=vertices_partial, root=0)
+graph_local = comm.scatter(sendobj=sendbuf, root=0)
 
-print(f'rank: {rank}')
-for i, vertex in enumerate(vertices_partial):
-    print(f'Vertex: {i}')
-    for edge in vertex:
-        print(edge)
+print(graph_local)
     
 
 
