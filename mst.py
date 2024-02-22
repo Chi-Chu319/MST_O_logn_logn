@@ -4,7 +4,6 @@ from mpi4py import MPI
 import sys
 import numpy as np
 
-from cluster_edge import ClusterEdge
 from graph import Graph, GraphLocal
 from quick_union import QuickUnionUF
 from utils.graph_utils import GraphUtil
@@ -167,15 +166,11 @@ while True:
     edge_to_add = edges_to_add[0]
 
     # Step 5
-    #     (done) TODO Each guardian send the edges to endpoints
     sendbuf_chosen_edge_endpoints = [[] for _ in range(size)]
     sendbuf_chosen_edge_endpoints[graph_local.get_vertex_machine(edge_to_add.get_from_v())].append(edge_to_add)
     sendbuf_chosen_edge_endpoints[graph_local.get_vertex_machine(edge_to_add.get_to_v())].append(edge_to_add)
 
     recvbuf_chosen_edge_endpoints = comm.alltoall(sendbuf_chosen_edge_endpoints)
-    # TODO update clusters_local (sorted)
-    # (done) TODO update graph_local
-    # (done) TODO update num_cluster
 
     edge_added = []
     for edges in recvbuf_chosen_edge_endpoints:
@@ -197,5 +192,7 @@ while True:
 
     # TODO check barrier after all collective communication
     k += 1
+
+print(graph_local)
 
 t_end = MPI.Wtime()
