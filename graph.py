@@ -19,6 +19,31 @@ class GraphLocal:
         self.vertices = vertices
         self.vertex_local_start = rank * num_vertex_local
 
+    def chose_edge(self, from_vertex: int, to_vertex: int):
+        if self.vertex_local_start <= from_vertex < self.vertex_local_start + self.num_vertex_local:
+            for edge in self.vertices[from_vertex - self.vertex_local_start]:
+                if edge.get_to() == to_vertex:
+                    edge.set_chosen(True)
+        if self.vertex_local_start <= to_vertex < self.vertex_local_start + self.num_vertex_local:
+            for edge in self.vertices[to_vertex - self.vertex_local_start]:
+                if edge.get_to() == from_vertex:
+                    edge.set_chosen(True)
+
+    def get_vertex_local_start(self) -> int:
+        return self.vertex_local_start
+
+    def get_num_vertex_local(self) -> int:
+        return self.num_vertex_local
+
+    def get_vertices(self) -> List[List[WeightedEdge]]:
+        return self.vertices
+
+    def get_comm_size(self) -> int:
+        return self.comm_size
+
+    def get_vertex_machine(self, vertex: int) -> int:
+        return vertex // self.num_vertex_local
+
     def __str__(self) -> str:
         result = f'rank: {self.rank}\n'
 

@@ -1,64 +1,64 @@
 from typing import List
 
 from cluster_edge import ClusterEdge
+from graph import GraphLocal
 
 
-class GraphUtils(object):
+class GraphUtil:
     @staticmethod
-    def get_min_weight_to_cluster_edges(vertex, vertex_local, edges_local, weights_local, chosen_edges_local,
-                                        cluster_leaders) -> List[ClusterEdge]:
-        vertex_cluster = cluster_leaders[vertex]
+    def get_min_weight_to_cluster_edges(graph_local: GraphLocal, cluster_leaders: List[int]) -> List[List[ClusterEdge]]:
+        vertex_local_start = graph_local.get_vertex_local_start()
+        comm_size = graph_local.get_comm_size()
+        vertices = graph_local.get_vertices()
 
-        to_clusters = []
+        sendbuf = [[] for _ in range(comm_size)]
 
-        for edge_idx, edge in enumerate(edges_local[vertex_local]):
-            # if not chosen and not from the same cluster
-            if not cluster_leaders[edge] == vertex_cluster and chosen_edges_local[vertex_local][edge_idx] == 0:
-                to_clusters.append(cluster_leaders[edge])
+        for vertex_local, edges in enumerate(vertices):
+            vertex = vertex_local + vertex_local_start
 
-        to_clusters = list(set(to_clusters))
+            cluster_edges = [
+                ClusterEdge(
+                    from_cluster=cluster_leaders[vertex],
+                    from_v=vertex,
+                    to_cluster=cluster_leaders[edge.get_to()],
+                    edge=edge.copy()
+                )
+                for edge in edges if not edge.chosen
+            ]
 
-        to_clusters_edges = [None] * len(to_clusters)
+            min_cluster_edges = {}
 
-        for to_cluster in to_clusters:
-            for edge_idx, edge in enumerate(edges_local[vertex_local]):
-                weight = weights_local[edge_idx]
+            for cluster_edge in cluster_edges:
+                to_cluster = cluster_edge.get_to_cluster()
+                if to_cluster not in min_cluster_edges or min_cluster_edges[to_cluster].edge.get_weight() > cluster_edge.edge.get_weight():
+                    min_cluster_edges[to_cluster] = cluster_edge
 
-                if cluster_leaders[edge] == to_cluster:
-                    to_clusters_edges[to_cluster] = ClusterEdge(
-                        from_v=vertex,
-                        to_v=edge,
-                        from_cluster=vertex_cluster,
-                        to_cluster=to_cluster,
-                        weight=weight
-                    )
+            for cluster_edge in min_cluster_edges.values():
+                cluster_leader = cluster_edge.get_to_cluster()
+                sendbuf[graph_local.get_vertex_machine(cluster_leader)].append(cluster_edge)
 
-        return to_clusters_edges
+        return sendbuf
 
     @staticmethod
     def get_min_weight_from_cluster_edges(cluster_edges: List[ClusterEdge]) -> List[ClusterEdge]:
-        from_clusters = []
+        """Filter the edges with the same from_cluster/to_v and get the minimum weight edge from each cluster"""
 
-        for edge in cluster_edges:
-            # if not chosen and not from the same cluster
-            from_clusters.append(edge.from_cluster)
+        min_cluster_edges = {}
 
-        from_clusters = list(set(from_clusters))
+        for cluster_edge in cluster_edges:
+            from_cluster = cluster_edge.get_from_cluster()
+            if from_cluster not in min_cluster_edges or min_cluster_edges[from_cluster].edge.get_weight() > cluster_edge.edge.get_weight():
+                min_cluster_edges[from_cluster] = cluster_edge
 
-        from_clusters_edges = []
+        cluster_edges_unique_from_cluster = list(min_cluster_edges.values())
 
-        for from_cluster in from_clusters:
-            min_weight = -1
-            from_cluster_edge = None
-            for edge in cluster_edges:
-                if edge.from_cluster == from_cluster:
-                    if min_weight == -1 or min_weight > edge.weight:
-                        min_weight = edge.weight
-                        from_cluster_edge = edge
+        min_cluster_edges = {}
 
-            from_clusters_edges.append(from_cluster_edge)
+        for cluster_edge in cluster_edges_unique_from_cluster:
+            to_v = cluster_edge.get_edge().get_to()
+            if to_v not in min_cluster_edges or min_cluster_edges[to_v].edge.get_weight() > cluster_edge.edge.get_weight():
+                min_cluster_edges[to_v] = cluster_edge
 
-        return from_clusters_edges
+        result = list(min_cluster_edges.values())
 
-    # @staticmethod
-    # def remove_duplicate(l: List[T]):
+        return result

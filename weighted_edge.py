@@ -1,5 +1,4 @@
 class WeightedEdge:
-
     def __init__(self, to: int, weight: float):
         self.chosen = False
         self.to = to
@@ -25,3 +24,6 @@ class WeightedEdge:
 
     def __eq__(self, other):
         return self.weight == other.weight
+
+    def copy(self) -> 'WeightedEdge':
+        return WeightedEdge(self.to, self.weight)
