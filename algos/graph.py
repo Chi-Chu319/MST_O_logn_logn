@@ -1,7 +1,7 @@
 from typing import List
 
 import numpy as np
-from weighted_edge import WeightedEdge
+from algos.weighted_edge import WeightedEdge
 
 
 class GraphLocal:
@@ -57,7 +57,8 @@ class GraphLocal:
 
 class Graph:
     def __init__(self, comm_size: int, num_vertex_local: int, expected_degree: int, max_weights: int) -> None:
-        self.rng = np.random.default_rng()
+        # TODO remove seed
+        self.rng = np.random.default_rng(seed=911)
 
         self.comm_size = comm_size
         self.num_vertex_local = num_vertex_local

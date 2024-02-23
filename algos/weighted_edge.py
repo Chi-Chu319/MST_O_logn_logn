@@ -17,7 +17,7 @@ class WeightedEdge:
         return self.chosen
 
     def __str__(self) -> str:
-        return f'to: {self.to}, weight: {self.weight}'
+        return f'to: {self.to}, weight: {self.weight}, chosen: {self.chosen}'
 
     def __lt__(self, other):
         return self.weight < other.weight

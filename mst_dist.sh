@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=2
 #SBATCH --mem-per-cpu=500M
-#SBATCH --output=vertex_generation.out
+#SBATCH --output=mst_result.out
 #SBATCH --partition=small
 
-time srun python3 mst.py 5 3 10
+time srun python3 main.py 3 20 10

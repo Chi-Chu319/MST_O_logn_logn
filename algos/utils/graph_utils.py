@@ -1,12 +1,13 @@
 from typing import List
 
-from cluster_edge import ClusterEdge
-from graph import GraphLocal
+from algos.cluster_edge import ClusterEdge
+from algos.graph import GraphLocal
 
 
 class GraphUtil:
     @staticmethod
     def get_min_weight_to_cluster_edges(graph_local: GraphLocal, cluster_leaders: List[int]) -> List[List[ClusterEdge]]:
+        # Compute the minimum-weight edge e(v, F') that connects v to (any node of) F' for all clusters F' not = F.
         vertex_local_start = graph_local.get_vertex_local_start()
         comm_size = graph_local.get_comm_size()
         vertices = graph_local.get_vertices()
@@ -60,5 +61,10 @@ class GraphUtil:
                 min_cluster_edges[to_v] = cluster_edge
 
         result = list(min_cluster_edges.values())
+
+        if len(result) == 0:
+            print("cluster_edges_unique_from_cluster")
+            for edge in cluster_edges_unique_from_cluster:
+                print(edge)
 
         return result

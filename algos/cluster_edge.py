@@ -1,4 +1,4 @@
-from weighted_edge import WeightedEdge
+from algos.weighted_edge import WeightedEdge
 
 
 class ClusterEdge:
@@ -38,7 +38,7 @@ class ClusterEdge:
         return self.edge
 
     def __str__(self) -> str:
-        return f'from: {self.from_v}, from_cluster: {self.from_cluster}, to_cluster: {self.to_cluster}, edge: {str(self.edge)}'
+        return f'from: {self.from_v}, from_cluster: {self.from_cluster}, to_cluster: {self.to_cluster}, edge: {str(self.edge)}, guardian: {str(self.guardian)}'
 
     def __lt__(self, other):
         return self.edge < other.edge

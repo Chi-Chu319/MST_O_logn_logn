@@ -8,6 +8,7 @@ from graph import Graph, GraphLocal
 from quick_union import QuickUnionUF
 from utils.graph_utils import GraphUtil
 
+
 # Initialize MPI
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
@@ -27,15 +28,18 @@ if rank == 0:
     )
     graph.generate()
     sendbuf = graph.split()
+    print("graph")
+    print(graph)
 else:
     sendbuf = None
 
 # Scatter vertices and degrees
 graph_local: GraphLocal = comm.scatter(sendobj=sendbuf, root=0)
+comm.barrier()
 
 # [rank * num_vertex_local, (rank + 1) * num_vertex_local) 
 vertex_local_start = rank * num_vertex_local
-num_vertex = num_vertex_local * expected_degree
+num_vertex = num_vertex_local * size
 
 
 # phase
@@ -59,8 +63,13 @@ t_start = MPI.Wtime()
 while True:
     # Step 1
     sendbuf_to_clusters = GraphUtil.get_min_weight_to_cluster_edges(graph_local, cluster_leaders)
+    # print(f"sendbuf_to_clusters, rank={rank}")
+    # for edges in sendbuf_to_clusters:
+    #     for edge in edges:
+    #         print(edge)
 
     recvbuf_to_clusters = comm.alltoall(sendbuf_to_clusters)
+    comm.barrier()
 
     # Step 2
     clusters_edges = [[] for _ in range(num_vertex_local)]
@@ -78,7 +87,17 @@ while True:
         min_weight_cluster_edges = sorted(GraphUtil.get_min_weight_from_cluster_edges(cluster_edges))
 
         mu = min(len(clusters_local[vertex_local]), num_cluster, len(min_weight_cluster_edges))
+        if mu == 0:
+            print("mu == 0")
+            print(f"rank={rank}")
+            # len(clusters_local[vertex_local]) == 0
+            print(f'vertex_local={vertex_local}')
+            print(f'cluster_leaders={cluster_leaders}')
+            for edge in cluster_edges:
+                print(edge)
         min_weight_cluster_edges = min_weight_cluster_edges[:mu]
+
+
         min_weight_cluster_edges[-1].set_heaviest(True)
 
         # Scatter the edges from each cluster leader to cluster members
@@ -89,6 +108,7 @@ while True:
                 sendbuf_from_clusters[graph_local.get_vertex_machine(cluster_vertex)].append(edge)
 
     recvbuf_from_clusters = comm.alltoall(sendbuf_from_clusters)
+    comm.barrier()
 
     # Step 3
     # Each cluster member send edges to v_0
@@ -97,6 +117,7 @@ while True:
         gardian_cluster_edges.extend(edges)
 
     gathered_edges = comm.gather(gardian_cluster_edges, root=0)
+    comm.barrier()
 
     # Step 4
     if rank == 0:
@@ -159,18 +180,16 @@ while True:
         sendbuf_chosen_edges = None
 
     edges_to_add = comm.scatter(sendobj=sendbuf_chosen_edges, root=0)
-
-    if len(edges_to_add) > 1:
-        raise Exception("guardian has more than one edge")
-
-    edge_to_add = edges_to_add[0]
+    comm.barrier()
 
     # Step 5
     sendbuf_chosen_edge_endpoints = [[] for _ in range(size)]
-    sendbuf_chosen_edge_endpoints[graph_local.get_vertex_machine(edge_to_add.get_from_v())].append(edge_to_add)
-    sendbuf_chosen_edge_endpoints[graph_local.get_vertex_machine(edge_to_add.get_to_v())].append(edge_to_add)
+    for edge_to_add in edges_to_add:
+        sendbuf_chosen_edge_endpoints[graph_local.get_vertex_machine(edge_to_add.get_from_v())].append(edge_to_add)
+        sendbuf_chosen_edge_endpoints[graph_local.get_vertex_machine(edge_to_add.get_to_v())].append(edge_to_add)
 
     recvbuf_chosen_edge_endpoints = comm.alltoall(sendbuf_chosen_edge_endpoints)
+    comm.barrier()
 
     edge_added = []
     for edges in recvbuf_chosen_edge_endpoints:
@@ -180,10 +199,9 @@ while True:
         graph_local.chose_edge(edge.get_from_v(), edge.get_to_v())
 
     comm.bcast(num_cluster, root=0)
+    comm.barrier()
     comm.bcast(cluster_leaders, root=0)
-
-    if num_cluster == 1:
-        break
+    comm.barrier()
 
     clusters_local = [[] for _ in range(num_vertex_local)]
     for vertex, cluster_leader in enumerate(cluster_leaders):
@@ -192,6 +210,16 @@ while True:
 
     # TODO check barrier after all collective communication
     k += 1
+
+    print(f'k={k}')
+    print(f'num_cluster={num_cluster}')
+    print(f'cluster_leaders: {cluster_leaders}')
+
+    if k >= 10:
+        break
+
+    if num_cluster == 1:
+        break
 
 print(graph_local)
 
