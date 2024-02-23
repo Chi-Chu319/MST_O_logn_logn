@@ -1,8 +1,7 @@
 from typing import List
 
 import numpy as np
-from algos.weighted_edge import WeightedEdge
-
+import sys
 
 class GraphLocal:
     def __init__(
@@ -10,7 +9,7 @@ class GraphLocal:
             comm_size: int,
             rank: int,
             num_vertex_local: int,
-            vertices: List[List[WeightedEdge]]
+            vertices: List[List[float]]
     ):
         self.rank = rank
         self.comm_size = comm_size
@@ -19,23 +18,13 @@ class GraphLocal:
         self.vertices = vertices
         self.vertex_local_start = rank * num_vertex_local
 
-    def chose_edge(self, from_vertex: int, to_vertex: int):
-        if self.vertex_local_start <= from_vertex < self.vertex_local_start + self.num_vertex_local:
-            for edge in self.vertices[from_vertex - self.vertex_local_start]:
-                if edge.get_to() == to_vertex:
-                    edge.set_chosen(True)
-        if self.vertex_local_start <= to_vertex < self.vertex_local_start + self.num_vertex_local:
-            for edge in self.vertices[to_vertex - self.vertex_local_start]:
-                if edge.get_to() == from_vertex:
-                    edge.set_chosen(True)
-
     def get_vertex_local_start(self) -> int:
         return self.vertex_local_start
 
     def get_num_vertex_local(self) -> int:
         return self.num_vertex_local
 
-    def get_vertices(self) -> List[List[WeightedEdge]]:
+    def get_vertices(self) -> List[List[float]]:
         return self.vertices
 
     def get_comm_size(self) -> int:
@@ -64,8 +53,7 @@ class Graph:
         self.expected_degree = expected_degree
         self.max_weights = max_weights
         self.num_vertices = self.comm_size * self.num_vertex_local
-
-        self.vertices = [[] for _ in range(self.num_vertices)]
+        self.vertices = np.zeros((self.num_vertices, self.num_vertices))
 
     def generate(self):
         p = self.expected_degree / (self.num_vertices - 1)
@@ -73,13 +61,15 @@ class Graph:
         for i in range(self.num_vertices):
             for j in range(i + 1, self.num_vertices):
                 if self.rng.random() < p:
-                    vertex_i, vertex_j = self.__generate_edges(i, j)
-                    self.vertices[i].append(vertex_i)
-                    self.vertices[j].append(vertex_j)
+                    weight = self.__random_weight()
+                    self.vertices[i][j] = weight
+                    self.vertices[j][i] = weight
 
-    def __generate_edges(self, i: int, j: int) -> (WeightedEdge, WeightedEdge):
-        weight = self.rng.random() * self.max_weights
-        return WeightedEdge(j, weight), WeightedEdge(i, weight)
+        for i in range(self.num_vertices):
+            self.vertices[i][i] = sys.maxsize
+
+    def __random_weight(self) -> float:
+        return self.rng.random() * self.max_weights
 
     def split(self) -> List[GraphLocal]:
         result = []

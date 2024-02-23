@@ -1,8 +1,7 @@
 from mpi4py import MPI
 import sys
-from algos.mst_distributed import mst_distributed
-from algos.graph import Graph, GraphLocal
-from algos.mst_sequential import mst_sequential
+from algo.graph import Graph
+from tester import seq_vs_dist
 
 # Initialize MPI
 comm = MPI.COMM_WORLD
@@ -26,34 +25,5 @@ if rank == 0:
 else:
     graph = None
 
-"""
-Distributed MST
-"""
-if rank == 0:
-    sendbuf = graph.split()
-else:
-    sendbuf = None
-# Scatter vertices and degrees
-graph_local: GraphLocal = comm.scatter(sendobj=sendbuf, root=0)
-comm.barrier()
-t_start = MPI.Wtime()
+seq_vs_dist(graph, comm, rank, size, num_vertex_local)
 
-mst_distributed(
-    comm=comm,
-    rank=rank,
-    size=size,
-    num_vertex_local=num_vertex_local,
-    graph_local=graph_local
-)
-
-t_end = MPI.Wtime()
-
-"""
-Sequential MST
-"""
-if rank == 0:
-    t_start_seq = MPI.Wtime()
-    mst = mst_sequential(graph)
-    t_end_seq = MPI.Wtime()
-
-    print(mst)
