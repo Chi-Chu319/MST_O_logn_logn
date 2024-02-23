@@ -30,10 +30,9 @@ def mst_sequential(graph: Graph):
         in_mst[u] = True
 
         # The vertex is not connected to itself
-        for edge in vertices[u]:
-            v = edge.get_to()
-            if 0 < edge.get_weight() < min_weights[v] and not in_mst[v]:
-                min_weights[v] = edge.get_weight()
+        for v in range(graph.num_vertices):
+            if 0 < vertices[u][v] < min_weights[v] and not in_mst[v]:
+                min_weights[v] = vertices[u][v]
                 parent[v] = u
 
     return parent

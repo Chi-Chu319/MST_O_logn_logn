@@ -36,9 +36,9 @@ else:
 # Scatter vertices and degrees
 graph_local: GraphLocal = comm.scatter(sendobj=sendbuf, root=0)
 comm.barrier()
-t_start = MPI.Wtime()
+t_start_dist = MPI.Wtime()
 
-mst_distributed(
+mst_edges_distributed = mst_distributed(
     comm=comm,
     rank=rank,
     size=size,
@@ -46,14 +46,28 @@ mst_distributed(
     graph_local=graph_local
 )
 
-t_end = MPI.Wtime()
+t_end_dist = MPI.Wtime()
 
 """
 Sequential MST
 """
-if rank == 0:
-    t_start_seq = MPI.Wtime()
-    mst = mst_sequential(graph)
-    t_end_seq = MPI.Wtime()
+t_start_seq = MPI.Wtime()
 
-    print(mst)
+if rank == 0:
+    mst_sequential = mst_sequential(graph)
+
+t_end_seq = MPI.Wtime()
+
+# Compare results
+if rank == 0:
+    vertices = graph.vertices
+
+    weight_sum_distributed = sum([edge[2] for edge in mst_edges_distributed])
+    weight_sum_seq = sum([vertices[i][mst_sequential[i]] for i in range(1, graph.num_vertices)])
+
+    assert mst_edges_distributed == mst_sequential
+    print(f"Weight sum distributed: {weight_sum_distributed}")
+    print(f"Weight sum sequential: {weight_sum_seq}")
+    print(f"Sequential MST time: {t_end_seq - t_start_seq}")
+    print(f"Distributed MST time: {t_end_dist - t_start_dist}")
+    print("MST edges are equal")
