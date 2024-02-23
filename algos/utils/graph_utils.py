@@ -62,9 +62,4 @@ class GraphUtil:
 
         result = list(min_cluster_edges.values())
 
-        if len(result) == 0:
-            print("cluster_edges_unique_from_cluster")
-            for edge in cluster_edges_unique_from_cluster:
-                print(edge)
-
         return result

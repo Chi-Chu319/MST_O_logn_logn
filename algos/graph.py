@@ -57,8 +57,7 @@ class GraphLocal:
 
 class Graph:
     def __init__(self, comm_size: int, num_vertex_local: int, expected_degree: int, max_weights: int) -> None:
-        # TODO remove seed
-        self.rng = np.random.default_rng(seed=911)
+        self.rng = np.random.default_rng()
 
         self.comm_size = comm_size
         self.num_vertex_local = num_vertex_local
