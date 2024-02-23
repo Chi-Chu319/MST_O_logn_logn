@@ -43,7 +43,7 @@ def mst_distributed(comm: MPI. Intracomm, size: int, rank: int, num_vertex_local
         clusters_edges = [[] for _ in range(num_vertex_local)]
         for edges in recvbuf_to_clusters:
             for edge in edges:
-                clusters_edges[edge.to_cluster - vertex_local_start].append(edge)
+                clusters_edges[edge.get_to_cluster() - vertex_local_start].append(edge)
 
         sendbuf_from_clusters = [[] for _ in range(size)]
 
@@ -127,7 +127,6 @@ def mst_distributed(comm: MPI. Intracomm, size: int, rank: int, num_vertex_local
             for idx, cluster_leader in enumerate(cluster_leaders):
                 cluster_leaders[idx] = new_clusters_map[cluster_leader]
 
-        #     TODO scatter edges to guardians
             sendbuf_chosen_edges = [[] for _ in range(size)]
             for edge in added_edges:
                 sendbuf_chosen_edges[graph_local.get_vertex_machine(edge.get_guardian())].append(edge)
