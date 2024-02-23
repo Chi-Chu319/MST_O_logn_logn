@@ -65,9 +65,10 @@ if rank == 0:
     weight_sum_distributed = sum([edge[2] for edge in mst_edges_distributed])
     weight_sum_seq = sum([vertices[i][mst_sequential[i]] for i in range(1, graph.num_vertices)])
 
-    assert mst_edges_distributed == mst_sequential
     print(f"Weight sum distributed: {weight_sum_distributed}")
     print(f"Weight sum sequential: {weight_sum_seq}")
     print(f"Sequential MST time: {t_end_seq - t_start_seq}")
     print(f"Distributed MST time: {t_end_dist - t_start_dist}")
+
+    assert weight_sum_distributed == weight_sum_seq
     print("MST edges are equal")

@@ -61,7 +61,7 @@ class GraphUtil:
         min_cluster_edges = {}
 
         for cluster_edge in cluster_edges_unique_from_cluster:
-            to_v = cluster_edge.get_edge().get_to()
+            to_v = cluster_edge.get_to_v()
             if to_v not in min_cluster_edges or min_cluster_edges[to_v].get_weight() > cluster_edge.get_weight():
                 min_cluster_edges[to_v] = cluster_edge
 

@@ -14,7 +14,7 @@ class ClusterEdge:
         return self.from_v
 
     def get_to_v(self) -> int:
-        return self.get_to_v()
+        return self.to_v
 
     def get_weight(self) -> float:
         return self.weight
