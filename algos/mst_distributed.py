@@ -174,3 +174,4 @@ def mst_distributed(comm: MPI. Intracomm, size: int, rank: int, num_vertex_local
             break
 
 
+    print(graph_local)

@@ -2,6 +2,7 @@ from mpi4py import MPI
 import sys
 from algos.mst_distributed import mst_distributed
 from algos.graph import Graph, GraphLocal
+from algos.mst_sequential import mst_sequential
 
 # Initialize MPI
 comm = MPI.COMM_WORLD
@@ -22,6 +23,8 @@ if rank == 0:
         num_vertex_local=num_vertex_local
     )
     graph.generate()
+else:
+    graph = None
 
 """
 Distributed MST
@@ -48,3 +51,9 @@ t_end = MPI.Wtime()
 """
 Sequential MST
 """
+if rank == 0:
+    t_start_seq = MPI.Wtime()
+    mst = mst_sequential(graph)
+    t_end_seq = MPI.Wtime()
+
+    print(mst)
