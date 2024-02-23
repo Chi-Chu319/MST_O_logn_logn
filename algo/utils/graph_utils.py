@@ -1,8 +1,8 @@
 from typing import List
 
-from algos.cluster_edge import ClusterEdge
-from algos.graph import GraphLocal
-from algos.quick_union import QuickUnionUF
+from algo.cluster_edge import ClusterEdge
+from algo.graph import GraphLocal
+from algo.quick_union import QuickUnionUF
 
 
 class GraphUtil:

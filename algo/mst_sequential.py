@@ -1,4 +1,4 @@
-from algos.graph import Graph
+from algo.graph import Graph
 import sys
 
 
