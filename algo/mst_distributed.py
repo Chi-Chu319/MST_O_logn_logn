@@ -29,9 +29,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
     # Option 2 each node hold a copy of the array and update it end of each phase (current solution)
     '''
 
-    # vertex -> cluster leader (will be updated by rank 0 each iter)
-    # cluster_leaders: List[int] = np.arange(0, num_vertex).tolist()
-    # contains the vertex in clusters if a local vertex is a leader of a cluster if not [] (The vertices are sorted by indices)
+    # contains the vertices in a cluster if a local vertex is a leader of a cluster if not [] (The vertices are sorted by indices)
     clusters_local = [[i + vertex_local_start] for i in range(num_vertex_local)]
     num_cluster = num_vertex
 
@@ -45,6 +43,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         t_start_all = MPI.Wtime()
 
         cluster_finder.set_id(cluster_finder_id)
+        cluster_finder.reset_finished()
         # Step 1
         sendbuf_to_clusters = GraphUtil.get_min_weight_to_cluster_edges(graph_local, cluster_finder)
 
@@ -146,6 +145,10 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
             for edge in added_edges:
                 mst_edges.append((edge.get_from_v(), edge.get_to_v(), edge.get_weight()))
 
+            cluster_finder.flatten()
+
+        cluster_finder_id = cluster_finder.get_id()
+
         '''
         ------------------------------------------------
         '''
@@ -166,6 +169,9 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
                 clusters_local[cluster_leader - vertex_local_start].append(vertex)
 
         # TODO check barrier (is necessary?) after all collective communication
+        if k >= 15:
+            raise Exception("k reaches 15")
+
         k += 1
 
         t_end_all = MPI.Wtime()

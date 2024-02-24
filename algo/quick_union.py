@@ -13,11 +13,15 @@ class QuickUnionUF:
     def set_id(self, new_id: List[int]):
         self.id = new_id
 
+    def reset_finished(self):
+        self.finished = [False for i in range(len(self.id))]
+
     def get_id(self):
         return self.id
 
     def flatten(self):
-        self.id = [self.root(i) for i in self.id]
+        new_id = [self.root(i) for i in range(len(self.id))]
+        self.id = new_id
 
     def get_cluster_leader(self, i: int) -> int:
         return self.root(i)
@@ -37,6 +41,7 @@ class QuickUnionUF:
     def safe_union(self, p, q) -> bool:
         i = self.root(p)
         j = self.root(q)
+
         if i == j or (self.finished[i] and self.finished[j]):
             return False
 

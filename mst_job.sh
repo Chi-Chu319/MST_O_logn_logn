@@ -8,4 +8,4 @@
 #SBATCH --output=mst_result.out
 #SBATCH --partition=small
 
-time srun python3 main.py 3 20 10
+time srun python3 main.py 20 50 10
