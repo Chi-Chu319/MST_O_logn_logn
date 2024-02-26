@@ -65,6 +65,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
             for edge in edges:
                 clusters_edges[edge.get_to_cluster() - vertex_local_start].append(edge)
 
+
         sendbuf_from_clusters = [[] for _ in range(size)]
 
         for vertex_local, cluster_edges in enumerate(clusters_edges):
@@ -140,14 +141,13 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
                 elif (not merged) and edge.get_heaviest():
                     cluster_finder.set_finished(to_cluster)
 
-            num_cluster = len(set(cluster_finder.id))
-
             for edge in added_edges:
                 mst_edges.append((edge.get_from_v(), edge.get_to_v(), edge.get_weight()))
 
             cluster_finder.flatten()
 
         cluster_finder_id = cluster_finder.get_id()
+        num_cluster = len(set(cluster_finder_id))
 
         '''
         ------------------------------------------------

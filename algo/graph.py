@@ -46,7 +46,7 @@ class GraphLocal:
 
 
 class Graph:
-    def __init__(self, comm_size: int, num_vertex_local: int, expected_degree: int, max_weight: int) -> None:
+    def __init__(self, comm_size: int, num_vertex_local: int, expected_degree: int, max_weight: int, is_clique: bool) -> None:
         self.rng = np.random.default_rng()
 
         self.comm_size = comm_size
@@ -55,13 +55,14 @@ class Graph:
         self.max_weight = max_weight
         self.num_vertices = self.comm_size * self.num_vertex_local
         self.vertices = np.zeros((self.num_vertices, self.num_vertices))
+        self.clique = is_clique
 
-    def generate(self):
+    def generate(self) -> 'Graph':
         p = self.expected_degree / (self.num_vertices - 1)
 
         for i in range(self.num_vertices):
             for j in range(i + 1, self.num_vertices):
-                if self.rng.random() < p:
+                if (self.rng.random() < p) or self.clique:
                     weight = self.__random_weight()
                     self.vertices[i][j] = weight
                     self.vertices[j][i] = weight
@@ -69,6 +70,8 @@ class Graph:
         for i in range(self.num_vertices):
             self.vertices[i][i] = sys.maxsize
 
+        return self
+        
     def __random_weight(self) -> float:
         return self.rng.random() * self.max_weight
 
