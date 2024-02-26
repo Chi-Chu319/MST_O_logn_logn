@@ -3,7 +3,7 @@ from mpi4py import MPI
 from algo.graph import Graph, GraphLocal
 from algo.mst_distributed import mst_distributed
 from algo.mst_sequential import mst_sequential
-from algo.utils.log_utils import LogUtils
+from algo.utils.log_util import LogUtil
 
 
 def seq_vs_dist(graph: Graph, comm: MPI.Intracomm, rank: int, size: int, num_vertex_local: int):
@@ -41,15 +41,5 @@ def seq_vs_dist(graph: Graph, comm: MPI.Intracomm, rank: int, size: int, num_ver
 
     t_end_seq = MPI.Wtime()
 
-    if rank == 0:
-        LogUtils.log_seq_vs_dist(
-            graph=graph,
-            t_start_seq=t_start_seq,
-            t_end_seq=t_end_seq,
-            t_start_dist=t_start_dist,
-            t_end_dist=t_end_dist,
-            mst_seq=mst_seq,
-            mst_edges_dist=mst_edges_dist,
-            k_dist=k_dist,
-            logs_dist=logs_dist
-        )
+    return graph, t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist
+

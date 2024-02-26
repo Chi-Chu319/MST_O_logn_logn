@@ -3,6 +3,7 @@ from typing import List
 import numpy as np
 import sys
 
+
 class GraphLocal:
     def __init__(
             self,
@@ -45,13 +46,13 @@ class GraphLocal:
 
 
 class Graph:
-    def __init__(self, comm_size: int, num_vertex_local: int, expected_degree: int, max_weights: int) -> None:
+    def __init__(self, comm_size: int, num_vertex_local: int, expected_degree: int, max_weight: int) -> None:
         self.rng = np.random.default_rng()
 
         self.comm_size = comm_size
         self.num_vertex_local = num_vertex_local
         self.expected_degree = expected_degree
-        self.max_weights = max_weights
+        self.max_weight = max_weight
         self.num_vertices = self.comm_size * self.num_vertex_local
         self.vertices = np.zeros((self.num_vertices, self.num_vertices))
 
@@ -69,7 +70,7 @@ class Graph:
             self.vertices[i][i] = sys.maxsize
 
     def __random_weight(self) -> float:
-        return self.rng.random() * self.max_weights
+        return self.rng.random() * self.max_weight
 
     def split(self) -> List[GraphLocal]:
         result = []

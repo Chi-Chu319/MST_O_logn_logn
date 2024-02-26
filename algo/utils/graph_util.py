@@ -1,11 +1,23 @@
 from typing import List
 
 from algo.cluster_edge import ClusterEdge
-from algo.graph import GraphLocal
+from algo.graph import GraphLocal, Graph
 from algo.quick_union import QuickUnionUF
 
 
 class GraphUtil:
+    @staticmethod
+    def generate_graph(rank: int, comm_size: int, expected_degree: int, max_weight: int, num_vertex_local: int):
+        if rank == 0:
+            return Graph(
+                comm_size=comm_size,
+                expected_degree=expected_degree,
+                max_weight=max_weight,
+                num_vertex_local=num_vertex_local
+            )
+        else:
+            return None
+
     @staticmethod
     def get_min_weight_to_cluster_edges(graph_local: GraphLocal, cluster_finder: QuickUnionUF) -> List[List[ClusterEdge]]:
         # Compute the minimum-weight edge e(v, F') that connects v to (any node of) F' for all clusters F' not = F.

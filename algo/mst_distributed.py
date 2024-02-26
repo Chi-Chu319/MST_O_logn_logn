@@ -4,7 +4,7 @@ from mpi4py import MPI
 import numpy as np
 from algo.graph import GraphLocal
 from algo.quick_union import QuickUnionUF
-from algo.utils.graph_utils import GraphUtil
+from algo.utils.graph_util import GraphUtil
 
 # -----------!!!!!!!!!!!-----------
 # If one process exits because of error, other ones will be all waiting for alltoall messages in next step 
