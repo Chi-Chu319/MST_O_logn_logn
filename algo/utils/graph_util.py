@@ -14,7 +14,19 @@ class GraphUtil:
                 expected_degree=expected_degree,
                 max_weight=max_weight,
                 num_vertex_local=num_vertex_local
-            )
+            ).generate()
+        else:
+            return None
+
+    def generate_clique_graph(rank: int, comm_size: int, max_weight: int, num_vertex_local: int):
+        if rank == 0:
+            return Graph(
+                comm_size=comm_size,
+                expected_degree=-1,
+                max_weight=max_weight,
+                num_vertex_local=num_vertex_local,
+                is_clique=True
+            ).generate()
         else:
             return None
 

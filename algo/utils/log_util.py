@@ -22,10 +22,10 @@ class LogUtil:
     def is_same_weight(graph: Graph, mst_seq: List[int], mst_edges_dist: List[Tuple[int, int, int]], ):
         vertices = graph.vertices
 
-        weight_sum_distributed = sum([edge[2] for edge in mst_edges_dist])
+        weight_sum_dist = sum([edge[2] for edge in mst_edges_dist])
         weight_sum_seq = sum([vertices[i][mst_seq[i]] for i in range(1, graph.num_vertices)])
 
-        return math.isclose(weight_sum_distributed, weight_sum_seq)
+        return weight_sum_dist, weight_sum_seq == weight_sum_seq, weight_sum_dist
 
     @staticmethod
     def log_seq_vs_dist(
@@ -42,8 +42,10 @@ class LogUtil:
         if not LogUtil.is_same_weight(graph, mst_seq, mst_edges_dist):
             print("different results!")
             print(f"Weight sum distributed: {sum([edge[2] for edge in mst_edges_dist])}")
-            print(
-                f"Weight sum sequential: {sum([graph.vertices[i][mst_seq[i]] for i in range(1, graph.num_vertices)])}")
+            print(f"Weight sum sequential: {sum([graph.vertices[i][mst_seq[i]] for i in range(1, graph.num_vertices)])}")
+            print("mst_edges_dist: ", mst_edges_dist)
+            print("mst_seq: ", mst_seq)
+            print(graph)
 
         t_seq, t_dist, t_dist_seq, t_dist_mpi = LogUtil.seq_dist_time(
             t_start_seq=t_start_seq,
@@ -61,7 +63,7 @@ class LogUtil:
         print(f"Distributed MST time: {t_dist}")
         print(f"number of rounds: {k_dist}")
         for i in range(k_dist):
-            print(f"round {i}: seq time: {logs_dist[i][0]}, mpi time {logs_dist[i][1]}")
+            print(f"round {i}: seq time: {logs_dist[i][0] - logs_dist[i][1]}, mpi time {logs_dist[i][1]}")
         print("")
         print(f"total seq time: {t_dist_seq}")
         print(f"total mpi time: {t_dist_mpi}")
