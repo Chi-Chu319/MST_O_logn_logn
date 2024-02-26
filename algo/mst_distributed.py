@@ -65,7 +65,6 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
             for edge in edges:
                 clusters_edges[edge.get_to_cluster() - vertex_local_start].append(edge)
 
-
         sendbuf_from_clusters = [[] for _ in range(size)]
 
         for vertex_local, cluster_edges in enumerate(clusters_edges):
@@ -130,6 +129,10 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
             for edge in edges_to_add:
                 from_cluster = edge.get_from_cluster()
                 to_cluster = edge.get_to_cluster()
+
+                # check if dangerous
+                if cluster_finder.is_finished(to_cluster):
+                    continue
 
                 merged = cluster_finder.safe_union(from_cluster, to_cluster)
 

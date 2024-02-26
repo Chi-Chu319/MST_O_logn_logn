@@ -19,6 +19,9 @@ class QuickUnionUF:
     def get_id(self):
         return self.id
 
+    def is_finished(self, p):
+        return self.finished[self.root(p)]
+
     def flatten(self):
         new_id = [self.root(i) for i in range(len(self.id))]
         self.id = new_id
