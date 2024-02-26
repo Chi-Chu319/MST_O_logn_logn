@@ -61,9 +61,15 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
 
         # Step 2
         clusters_edges = [[] for _ in range(num_vertex_local)]
-        for edges in recvbuf_to_clusters:
-            for edge in edges:
-                clusters_edges[edge.get_to_cluster() - vertex_local_start].append(edge)
+        try:
+            for edges in recvbuf_to_clusters:
+                for edge in edges:
+                    clusters_edges[edge.get_to_cluster() - vertex_local_start].append(edge)
+        except IndexError:
+            print(f"edge.get_to_cluster()={edge.get_to_cluster()}")
+            print(f"rank={rank}")
+            print(f"num_vertex_local={num_vertex_local}")
+            raise Exception("IndexError")
 
         sendbuf_from_clusters = [[] for _ in range(size)]
 
