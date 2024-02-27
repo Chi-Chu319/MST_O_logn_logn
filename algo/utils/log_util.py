@@ -25,7 +25,7 @@ class LogUtil:
         weight_sum_dist = sum([edge[2] for edge in mst_edges_dist])
         weight_sum_seq = sum([vertices[i][mst_seq[i]] for i in range(1, graph.num_vertices)])
 
-        return weight_sum_dist, weight_sum_seq == weight_sum_seq, weight_sum_dist
+        return weight_sum_seq == weight_sum_seq, weight_sum_seq, weight_sum_dist
 
     @staticmethod
     def log_seq_vs_dist(
