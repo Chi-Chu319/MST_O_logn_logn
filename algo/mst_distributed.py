@@ -5,6 +5,7 @@ import numpy as np
 from algo.graph import GraphLocal
 from algo.quick_union import QuickUnionUF
 from algo.utils.graph_util import GraphUtil
+import sys
 
 # -----------!!!!!!!!!!!-----------
 # If one process exits because of error, other ones will be all waiting for alltoall messages in next step 
@@ -39,31 +40,54 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
     cluster_finder = QuickUnionUF(cluster_finder_id)
 
     while True:
+        t_seq_start = MPI.Wtime()
+
         mpi_time = 0
         t_start_all = MPI.Wtime()
+
+        if rank == 0:
+            print(f"cluster_finder size: {sys.getsizeof(cluster_finder.id)}")
+            print(f"clusters_local size: {sum([sys.getsizeof(edges) for edges in clusters_local])}")
 
         cluster_finder.set_id(cluster_finder_id)
         cluster_finder.reset_finished()
         # Step 1
-        sendbuf_to_clusters = GraphUtil.get_min_weight_to_cluster_edges(graph_local, cluster_finder)
+        # O(d logn) d is the degree
+        sendbuf_to_clusters = GraphUtil.get_min_weight_to_cluster_edges(graph_local, cluster_finder, k == 0)
+        
+        t_seq_end = MPI.Wtime()
+
+        if rank == 0:
+            print(f"1 {t_seq_end - t_seq_start}")
+
+
+        if rank == 0:
+            print(f"sendbuf_to_clusters size: {sum([sys.getsizeof(edges) for edges in sendbuf_to_clusters])}")
 
         '''
         ------------------------------------------------
         '''
         t_start = MPI.Wtime()
         recvbuf_to_clusters = comm.alltoall(sendbuf_to_clusters)
-        comm.barrier()
         t_end = MPI.Wtime()
         mpi_time += t_end - t_start
         '''
         ------------------------------------------------
         '''
+        t_seq_start = MPI.Wtime()
+
+        if rank == 0:
+            print(f"recvbuf_to_clusters size: {sum([sys.getsizeof(edges) for edges in recvbuf_to_clusters])}")
 
         # Step 2
         clusters_edges = [[] for _ in range(num_vertex_local)]
         for edges in recvbuf_to_clusters:
             for edge in edges:
                 clusters_edges[edge.get_to_cluster() - vertex_local_start].append(edge)
+
+
+        if rank == 0:
+            print(f"clusters_edges size: {sum([sys.getsizeof(edges) for edges in clusters_edges])}")
 
         sendbuf_from_clusters = [[] for _ in range(size)]
 
@@ -72,6 +96,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
                 continue
 
             # A(F)
+            # Worst case could be O(n'^2) edges where n' is the cluster size
             min_weight_cluster_edges = sorted(GraphUtil.get_min_weight_from_cluster_edges(cluster_edges))
 
             mu = min(len(clusters_local[vertex_local]), num_cluster, len(min_weight_cluster_edges))
@@ -87,17 +112,29 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
                     edge.set_guardian(cluster_vertex)
                     sendbuf_from_clusters[graph_local.get_vertex_machine(cluster_vertex)].append(edge)
 
+        t_seq_end = MPI.Wtime()
+
+        if rank == 0:
+            print(f"2 {t_seq_end - t_seq_start}")
+
+        if rank == 0:
+            print(f"sendbuf_from_clusters size: {sum([sys.getsizeof(edges) for edges in sendbuf_from_clusters])}")
+
         '''
         ------------------------------------------------
         '''
         t_start = MPI.Wtime()
         recvbuf_from_clusters = comm.alltoall(sendbuf_from_clusters)
-        comm.barrier()
         t_end = MPI.Wtime()
         mpi_time += t_end - t_start
         '''
         ------------------------------------------------
         '''
+        t_seq_start = MPI.Wtime()
+
+
+        if rank == 0:
+            print(f"recvbuf_from_clusters size: {sum([sys.getsizeof(edges) for edges in recvbuf_from_clusters])}")
 
         # Step 3
         # Each cluster member send edges to v_0
@@ -105,17 +142,32 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         for edges in recvbuf_from_clusters:
             guardian_cluster_edges.extend(edges)
 
+        if rank == 0:
+            print(f"guardian_cluster_edges size: {sys.getsizeof(guardian_cluster_edges)}")
+
+
+        t_seq_end = MPI.Wtime()
+
+        if rank == 0:
+            print(f"3 {t_seq_end - t_seq_start}")
+
         '''
         ------------------------------------------------
         '''
         t_start = MPI.Wtime()
         gathered_edges = comm.gather(guardian_cluster_edges, root=0)
-        comm.barrier()
         t_end = MPI.Wtime()
         mpi_time += t_end - t_start
         '''
         ------------------------------------------------
         '''
+
+        t_seq_start = MPI.Wtime()
+
+
+        if rank == 0:
+            print(f"gathered_edges size: {sum([sys.getsizeof(edges) for edges in gathered_edges])}")
+
 
         # Step 4
         if rank == 0:
@@ -125,6 +177,8 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
 
             edges_to_add = sorted(edges_to_add)
             added_edges = []
+
+            print(f"edges_to_add size: {sys.getsizeof(edges_to_add)}")
 
             for edge in edges_to_add:
                 from_cluster = edge.get_from_cluster()
@@ -144,6 +198,8 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
                 elif (not merged) and edge.get_heaviest():
                     cluster_finder.set_finished(to_cluster)
 
+            print(f"added_edges size: {sys.getsizeof(added_edges)}")
+
             for edge in added_edges:
                 mst_edges.append((edge.get_from_v(), edge.get_to_v(), edge.get_weight()))
 
@@ -152,19 +208,24 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         cluster_finder_id = cluster_finder.get_id()
         num_cluster = len(set(cluster_finder_id))
 
+        t_seq_end = MPI.Wtime()
+
+        if rank == 0:
+            print(f"4 {t_seq_end - t_seq_start}")
+
         '''
         ------------------------------------------------
         '''
         t_start = MPI.Wtime()
         num_cluster = comm.bcast(num_cluster, root=0)
-        comm.barrier()
         cluster_finder_id = comm.bcast(cluster_finder_id, root=0)
-        comm.barrier()
         t_end = MPI.Wtime()
         mpi_time += t_end - t_start
         '''
         ------------------------------------------------
         '''
+
+        t_seq_start = MPI.Wtime()
 
         clusters_local = [[] for _ in range(num_vertex_local)]
         for vertex, cluster_leader in enumerate(cluster_finder_id):
@@ -172,10 +233,15 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
                 clusters_local[cluster_leader - vertex_local_start].append(vertex)
 
         # TODO check barrier (is necessary?) after all collective communication
-        if k >= 15:
-            raise Exception("k reaches 15")
+        if k >= 10:
+            raise Exception("k reaches 10")
 
         k += 1
+
+        t_seq_end = MPI.Wtime()
+
+        if rank == 0:
+            print(f"5 {t_seq_end - t_seq_start}")
 
         t_end_all = MPI.Wtime()
         logs.append((t_end_all - t_start_all, mpi_time))

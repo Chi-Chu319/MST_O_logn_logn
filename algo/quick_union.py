@@ -1,7 +1,5 @@
 from typing import List
 
-import deprecation
-
 
 class QuickUnionUF:
     # For const_frag
@@ -29,6 +27,7 @@ class QuickUnionUF:
     def get_cluster_leader(self, i: int) -> int:
         return self.root(i)
 
+    # O(log n)
     def root(self, i):
         while i != self.id[i]:
             i = self.id[i]
@@ -41,6 +40,7 @@ class QuickUnionUF:
     def connected(self, p, q):
         return self.root(p) == self.root(q)
 
+    # O(log n)
     def safe_union(self, p, q) -> bool:
         i = self.root(p)
         j = self.root(q)
