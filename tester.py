@@ -3,7 +3,6 @@ from mpi4py import MPI
 from algo.graph import Graph, GraphLocal
 from algo.mst_distributed import mst_distributed
 from algo.mst_sequential import mst_sequential
-from algo.utils.log_util import LogUtil
 
 
 def seq_vs_dist(graph: Graph, comm: MPI.Intracomm, rank: int, size: int, num_vertex_local: int):

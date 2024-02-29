@@ -1,7 +1,6 @@
 from mpi4py import MPI
 from algo.utils.graph_util import GraphUtil
 from algo.utils.log_util import LogUtil
-from algo.cluster_edge import ClusterEdge
 from tester import seq_vs_dist
 import pandas as pd
 import sys

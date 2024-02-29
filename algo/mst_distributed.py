@@ -83,7 +83,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         clusters_edges = [[] for _ in range(num_vertex_local)]
         for edges in recvbuf_to_clusters:
             for edge in edges:
-                clusters_edges[cluster_finder.get_cluster_leader(edge.to_v) - vertex_local_start].append(edge)
+                clusters_edges[cluster_finder.get_cluster_leader(edge[1]) - vertex_local_start].append(edge)
 
 
         if rank == 0:
@@ -180,7 +180,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
 
             for edge_idx in range(len(edges_to_add) - 1, -1, -1):
                 edge = edges_to_add[edge_idx]
-                to_cluster = cluster_finder.get_cluster_leader(edge.to_v)
+                to_cluster = cluster_finder.get_cluster_leader(edge[1])
                 if to_cluster in encountered_clusters:
                     heaviest_edges[edge_idx] = True
                     encountered_clusters[to_cluster] = True
@@ -188,8 +188,8 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
             print(f"edges_to_add size: {sys.getsizeof(edges_to_add)}")
 
             for edge in edges_to_add:
-                from_cluster = cluster_finder.get_cluster_leader(edge.from_v)
-                to_cluster = cluster_finder.get_cluster_leader(edge.to_v)
+                from_cluster = cluster_finder.get_cluster_leader(edge[0])
+                to_cluster = cluster_finder.get_cluster_leader(edge[1])
 
                 # check if dangerous
                 if cluster_finder.is_finished(to_cluster):
@@ -207,9 +207,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
 
             print(f"added_edges size: {sys.getsizeof(added_edges)}")
 
-            for edge in added_edges:
-                mst_edges.append((edge.from_v, edge.to_v, edge.weight))
-
+            mst_edges.extend(added_edges)
             cluster_finder.flatten()
 
         cluster_finder_id = cluster_finder.get_id()
