@@ -42,6 +42,7 @@ class GraphUtil:
 
         for vertex_from_local, edges in enumerate(vertices):
             vertex_from = vertex_from_local + vertex_local_start
+            # Dict is more efficient than list (Why?)
             cluster_edges = {}
             for vertex_to, weight in enumerate(edges):
                 cluster_from = cluster_finder.get_cluster_leader(vertex_from)
