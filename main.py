@@ -1,6 +1,7 @@
 from mpi4py import MPI
 from algo.utils.graph_util import GraphUtil
 from algo.utils.log_util import LogUtil
+from algo.cluster_edge import ClusterEdge
 from tester import seq_vs_dist
 import pandas as pd
 import sys
@@ -27,6 +28,10 @@ if rank == 0:
 test_result = seq_vs_dist(graph, comm, rank, size, num_vertex_local)
 if rank == 0:
     LogUtil.log_seq_vs_dist(*test_result)
+    # print("int size:", sys.getsizeof(10))
+    # print("float size:", sys.getsizeof(10.1))
+    # print("Object size:", sys.getsizeof(ClusterEdge(10, 10, 1.1)))
+    # print("tuple size:", sys.getsizeof((10, 10, 1.1)))
 
 # data = {}
 

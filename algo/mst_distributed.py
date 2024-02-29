@@ -53,7 +53,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         cluster_finder.reset_finished()
         # Step 1
         # O(d logn) d is the degree
-        sendbuf_to_clusters = GraphUtil.get_min_weight_to_cluster_edges(graph_local, cluster_finder, k == 0)
+        sendbuf_to_clusters = GraphUtil.get_min_weight_to_cluster_edges(graph_local, cluster_finder)
         
         t_seq_end = MPI.Wtime()
 
@@ -83,7 +83,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         clusters_edges = [[] for _ in range(num_vertex_local)]
         for edges in recvbuf_to_clusters:
             for edge in edges:
-                clusters_edges[edge.get_to_cluster() - vertex_local_start].append(edge)
+                clusters_edges[cluster_finder.get_cluster_leader(edge.to_v) - vertex_local_start].append(edge)
 
 
         if rank == 0:
@@ -97,19 +97,16 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
 
             # A(F)
             # Worst case could be O(n'^2) edges where n' is the cluster size
-            min_weight_cluster_edges = sorted(GraphUtil.get_min_weight_from_cluster_edges(cluster_edges))
+            min_weight_cluster_edges = sorted(GraphUtil.get_min_weight_from_cluster_edges(cluster_edges, cluster_finder))
 
             mu = min(len(clusters_local[vertex_local]), num_cluster, len(min_weight_cluster_edges))
 
             min_weight_cluster_edges = min_weight_cluster_edges[:mu]
 
-            min_weight_cluster_edges[-1].set_heaviest(True)
-
             # Scatter the edges from each cluster leader to cluster members
             for cluster_vertex_idx, cluster_vertex in enumerate(clusters_local[vertex_local]):
                 if cluster_vertex_idx < len(min_weight_cluster_edges):
                     edge = min_weight_cluster_edges[cluster_vertex_idx]
-                    edge.set_guardian(cluster_vertex)
                     sendbuf_from_clusters[graph_local.get_vertex_machine(cluster_vertex)].append(edge)
 
         t_seq_end = MPI.Wtime()
@@ -177,12 +174,22 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
 
             edges_to_add = sorted(edges_to_add)
             added_edges = []
+            heaviest_edges = [False] * len(edges_to_add)
+
+            encountered_clusters = {}
+
+            for edge_idx in range(len(edges_to_add) - 1, -1, -1):
+                edge = edges_to_add[edge_idx]
+                to_cluster = cluster_finder.get_cluster_leader(edge.to_v)
+                if to_cluster in encountered_clusters:
+                    heaviest_edges[edge_idx] = True
+                    encountered_clusters[to_cluster] = True
 
             print(f"edges_to_add size: {sys.getsizeof(edges_to_add)}")
 
             for edge in edges_to_add:
-                from_cluster = edge.get_from_cluster()
-                to_cluster = edge.get_to_cluster()
+                from_cluster = cluster_finder.get_cluster_leader(edge.from_v)
+                to_cluster = cluster_finder.get_cluster_leader(edge.to_v)
 
                 # check if dangerous
                 if cluster_finder.is_finished(to_cluster):
@@ -192,16 +199,16 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
 
                 if merged:
                     added_edges.append(edge)
-                    if edge.get_heaviest():
+                    if heaviest_edges[edge_idx]:
                         # both finished
                         cluster_finder.set_finished(from_cluster)
-                elif (not merged) and edge.get_heaviest():
+                elif (not merged) and heaviest_edges[edge_idx]:
                     cluster_finder.set_finished(to_cluster)
 
             print(f"added_edges size: {sys.getsizeof(added_edges)}")
 
             for edge in added_edges:
-                mst_edges.append((edge.get_from_v(), edge.get_to_v(), edge.get_weight()))
+                mst_edges.append((edge.from_v, edge.to_v, edge.weight))
 
             cluster_finder.flatten()
 
