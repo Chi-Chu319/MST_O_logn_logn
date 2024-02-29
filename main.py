@@ -71,6 +71,6 @@ while k <= k_max:
 
 if rank == 0:
     df = pd.DataFrame.from_dict(data, orient='index', columns=['t_seq', 't_dist', 't_dist_seq', 't_dist_mpi', 'k_dist'])
-    # df.to_csv('seq_vs_dist_n8_t1.csv')
-    df.to_csv('seq_vs_dist_n1_t8.csv')
+    df.to_csv('seq_vs_dist_n8_t1.csv')
+    # df.to_csv('seq_vs_dist_n1_t8.csv')
     print(df)
