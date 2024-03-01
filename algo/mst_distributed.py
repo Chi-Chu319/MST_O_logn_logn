@@ -159,6 +159,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         '''
         ------------------------------------------------
         '''
+        # TODO bcast does not comply with the congest clique model as it sends nlogn count. change to scatter and all to all later
         t_start = MPI.Wtime()
         num_cluster = comm.bcast(num_cluster, root=0)
         cluster_finder_id = comm.bcast(cluster_finder_id, root=0)
