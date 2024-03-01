@@ -19,6 +19,19 @@ class LogUtil:
         return t_end_seq - t_start_seq, t_end_dist - t_start_dist, t_dist - t_dist_mpi, t_dist_mpi
 
     @staticmethod
+    def dist_time(t_start_dist: float,
+                  t_end_dist: float,
+                  logs_dist: List[Tuple[float, int]]
+                  ):
+        """dist time, total seq time, total dist time"""
+        t_dist_seq = sum([logs_dist[i][0] for i in range(len(logs_dist))])
+        t_dist_mpi = sum([logs_dist[i][1] for i in range(len(logs_dist))])
+
+        t_dist = t_end_dist - t_start_dist
+
+        return t_end_dist - t_start_dist, t_dist - t_dist_mpi, t_dist_mpi
+
+    @staticmethod
     def is_same_weight(graph: Graph, mst_seq: List[int], mst_edges_dist: List[Tuple[int, int, int]], ):
         vertices = graph.vertices
 
