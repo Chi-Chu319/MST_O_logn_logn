@@ -29,48 +29,56 @@ max_weight = int(sys.argv[3])
 #     LogUtil.log_seq_vs_dist(*test_result)
 
 
+if rank  == 0:
+    print(sys.getsizeof(1))
+    print(sys.getsizeof((1)))
+    print(sys.getsizeof((1, 2)))
+    print(sys.getsizeof((1, 2, 3)))
+    print(sys.getsizeof((1, 2, 3.1)))
+    print(sys.getsizeof("1,2,3.1131231"))
+
 # ----------------------------
 
-data = {}
+# data = {}
 
-k = 0
-k_max = 8
-i = 2
-while k <= k_max:
-    num_vertex_local = i
-    graph = GraphUtil.generate_clique_graph(
-        rank=rank,
-        comm_size=size,
-        max_weight=10,
-        num_vertex_local=i
-    )
+# k = 0
+# k_max = 8
+# i = 2
+# while k <= k_max:
+#     num_vertex_local = i
+#     graph = GraphUtil.generate_clique_graph(
+#         rank=rank,
+#         comm_size=size,
+#         max_weight=10,
+#         num_vertex_local=i
+#     )
 
-    graph, t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist = seq_vs_dist(graph, comm, rank, size, num_vertex_local)
+#     graph, t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist = seq_vs_dist(graph, comm, rank, size, num_vertex_local)
 
-    if rank == 0:
-        is_same, weight_sum_seq, weight_sum_dist = LogUtil.is_same_weight(
-            graph=graph,
-            mst_seq=mst_seq,
-            mst_edges_dist=mst_edges_dist
-        )
-        if not is_same:
-            print(f"different results! graph size: {graph.num_vertices}, number of machines: {size}")
+#     if rank == 0:
+#         is_same, weight_sum_seq, weight_sum_dist = LogUtil.is_same_weight(
+#             graph=graph,
+#             mst_seq=mst_seq,
+#             mst_edges_dist=mst_edges_dist
+#         )
+#         if not is_same:
+#             print(f"different results! graph size: {graph.num_vertices}, number of machines: {size}")
 
-        t_seq, t_dist, t_dist_seq, t_dist_mpi = LogUtil.seq_dist_time(
-            t_start_seq=t_start_seq,
-            t_end_seq=t_end_seq,
-            t_start_dist=t_start_dist,
-            t_end_dist=t_end_dist,
-            logs_dist=logs_dist
-        )
+#         t_seq, t_dist, t_dist_seq, t_dist_mpi = LogUtil.seq_dist_time(
+#             t_start_seq=t_start_seq,
+#             t_end_seq=t_end_seq,
+#             t_start_dist=t_start_dist,
+#             t_end_dist=t_end_dist,
+#             logs_dist=logs_dist
+#         )
 
 
-        data[str(k)] = (t_seq, t_dist, t_dist_seq, t_dist_mpi, k_dist)
-    i = i*2
-    k += 1
+#         data[str(k)] = (t_seq, t_dist, t_dist_seq, t_dist_mpi, k_dist)
+#     i = i*2
+#     k += 1
 
-if rank == 0:
-    df = pd.DataFrame.from_dict(data, orient='index', columns=['t_seq', 't_dist', 't_dist_seq', 't_dist_mpi', 'k_dist'])
-    df.to_csv('seq_vs_dist_n8_t1.csv')
-    # df.to_csv('seq_vs_dist_n1_t8.csv')
-    print(df)
+# if rank == 0:
+#     df = pd.DataFrame.from_dict(data, orient='index', columns=['t_seq', 't_dist', 't_dist_seq', 't_dist_mpi', 'k_dist'])
+#     df.to_csv('seq_vs_dist_n8_t1.csv')
+#     # df.to_csv('seq_vs_dist_n1_t8.csv')
+#     print(df)
