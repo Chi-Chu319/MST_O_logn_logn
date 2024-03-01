@@ -38,12 +38,20 @@ k_max = 8
 i = 2
 while k <= k_max:
     num_vertex_local = i
-    graph = GraphUtil.generate_clique_graph(
+    graph_local = GraphUtil.generate_distribute_clique_graph(
+        comm=comm,
         rank=rank,
         comm_size=size,
-        max_weight=10,
-        num_vertex_local=i
+        max_weight=max_weight,
+        num_vertex_local=num_vertex_local
     )
+
+    # graph = GraphUtil.generate_clique_graph(
+    #     rank=rank,
+    #     comm_size=size,
+    #     max_weight=10,
+    #     num_vertex_local=i
+    # )
 
     graph, t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist = seq_vs_dist(graph, comm, rank, size, num_vertex_local)
 
@@ -64,8 +72,8 @@ while k <= k_max:
             logs_dist=logs_dist
         )
 
-
         data[str(k)] = (t_seq, t_dist, t_dist_seq, t_dist_mpi, k_dist)
+
     i = i*2
     k += 1
 

@@ -1,6 +1,9 @@
 from typing import List
 
-from algo.graph import GraphLocal, Graph
+import mpi4py.MPI
+from mpi4py import MPI
+
+from algo.graph import GraphLocal, Graph, DistGraphLocal
 from algo.quick_union import QuickUnionUF
 
 class GraphUtil:
@@ -29,6 +32,22 @@ class GraphUtil:
             ).generate()
         else:
             return None
+
+    @staticmethod
+    def generate_distribute_clique_graph(comm: MPI.Intracomm, rank: int, comm_size: int, max_weight: int, num_vertex_local: int):
+        dist_graph = DistGraphLocal(
+            comm_size=comm_size,
+            rank=rank,
+            max_weight=max_weight,
+            num_vertex_local=num_vertex_local,
+        )
+
+        sendbuf = dist_graph.generate()
+        recvbuf = comm.alltoall(sendbuf)
+
+        dist_graph.fill(recvbuf)
+
+        return dist_graph
 
     @staticmethod
     def get_min_weight_to_cluster_edges(graph_local: GraphLocal, cluster_finder: QuickUnionUF) -> List[List[tuple]]:
