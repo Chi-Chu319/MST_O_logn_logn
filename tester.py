@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 from mpi4py import MPI
 
-from algo.graph import Graph, GraphLocal
+from algo.graph import Graph, DistGraphLocal
 from algo.mst_distributed import mst_distributed
 from algo.mst_sequential import mst_sequential
 from algo.utils.graph_util import GraphUtil
@@ -19,7 +19,7 @@ def seq_vs_dist(comm: MPI.Intracomm, graph: Graph, rank: int, size: int, num_ver
     else:
         sendbuf = None
     # Scatter vertices
-    graph_local: GraphLocal = comm.scatter(sendobj=sendbuf, root=0)
+    graph_local: DistGraphLocal = comm.scatter(sendobj=sendbuf, root=0)
     comm.barrier()
     t_start_dist = MPI.Wtime()
 
@@ -27,7 +27,6 @@ def seq_vs_dist(comm: MPI.Intracomm, graph: Graph, rank: int, size: int, num_ver
         comm=comm,
         rank=rank,
         size=size,
-        num_vertex_local=num_vertex_local,
         graph_local=graph_local
     )
 
@@ -46,22 +45,6 @@ def seq_vs_dist(comm: MPI.Intracomm, graph: Graph, rank: int, size: int, num_ver
     t_end_seq = MPI.Wtime()
 
     return graph, t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist
-
-
-def single_seq_vs_dist(rank: int, size: int, comm: MPI.Intracomm, max_weight: int, num_vertex_local: int):
-    graph = GraphUtil.generate_clique_graph(
-        rank=rank,
-        comm_size=size,
-        max_weight=max_weight,
-        num_vertex_local=num_vertex_local
-    )
-
-    if rank == 0:
-        print(f"graph size: {sys.getsizeof(graph.vertices)}")
-
-    test_result = seq_vs_dist(comm, graph, rank, size, num_vertex_local)
-    if rank == 0:
-        LogUtil.log_seq_vs_dist(*test_result)
 
 
 def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
@@ -91,6 +74,8 @@ def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
             )
             if not is_same:
                 print(f"different results! graph size: {graph.num_vertices}, number of machines: {size}")
+                print(f"weight_sum_seq: {weight_sum_seq}, tree size: {len(mst_seq) - 1}")
+                print(f"weight_sum_dist: {weight_sum_dist}, tree size: {len(mst_edges_dist)}")
 
             t_seq, t_dist, t_dist_seq, t_dist_mpi = LogUtil.seq_dist_time(
                 t_start_seq=t_start_seq,
@@ -108,7 +93,7 @@ def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
     if rank == 0:
         df = pd.DataFrame.from_dict(data, orient='index',
                                     columns=['t_seq', 't_dist', 't_dist_seq', 't_dist_mpi', 'k_dist'])
-        df.to_csv(filename)
+        df.to_csv(f"{filename}.csv")
         print(df)
 
 
@@ -116,7 +101,7 @@ def range_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
     data = {}
 
     k = 0
-    k_max = 8
+    k_max = 10
     i = 2
     while k <= k_max:
         num_vertex_local = i
@@ -135,7 +120,6 @@ def range_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
             comm=comm,
             rank=rank,
             size=size,
-            num_vertex_local=num_vertex_local,
             graph_local=graph_local
         )
         t_end_dist = MPI.Wtime()
@@ -150,5 +134,5 @@ def range_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
     if rank == 0:
         df = pd.DataFrame.from_dict(data, orient='index',
                                     columns=['t_dist', 't_dist_seq', 't_dist_mpi', 'k_dist'])
-        df.to_csv(filename)
+        df.to_csv(f"{filename}.csv")
         print(df)

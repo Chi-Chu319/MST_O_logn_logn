@@ -2,10 +2,9 @@ from typing import List
 
 from mpi4py import MPI
 import numpy as np
-from algo.graph import GraphLocal
+from algo.graph import DistGraphLocal
 from algo.quick_union import QuickUnionUF
 from algo.utils.graph_util import GraphUtil
-import sys
 
 # -----------!!!!!!!!!!!-----------
 # If one process exits because of error, other ones will be all waiting for alltoall messages in next step 
@@ -13,8 +12,10 @@ import sys
 # -----------!!!!!!!!!!!-----------
 
 
-def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local: int, graph_local: GraphLocal):
-    # [rank * num_vertex_local, (rank + 1) * num_vertex_local) 
+def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, graph_local: DistGraphLocal):
+    # [rank * num_vertex_local, (rank + 1) * num_vertex_local)
+    num_vertex_local = graph_local.get_num_vertex_local()
+
     vertex_local_start = rank * num_vertex_local
     num_vertex = num_vertex_local * size
 
@@ -60,6 +61,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         '''
         ------------------------------------------------
         '''
+
         # Step 2
         clusters_edges = [[] for _ in range(num_vertex_local)]
         for edges in recvbuf_to_clusters:
@@ -74,9 +76,12 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
 
             # A(F)
             # Worst case could be O(n'^2) edges where n' is the cluster size
-            min_weight_cluster_edges = sorted(GraphUtil.get_min_weight_from_cluster_edges(cluster_edges, cluster_finder))
+            min_weight_cluster_edges = sorted(
+                GraphUtil.get_min_weight_from_cluster_edges(cluster_edges, cluster_finder),
+                key=lambda x: x[2]
+            )
 
-            mu = min(len(clusters_local[vertex_local]), num_cluster, len(min_weight_cluster_edges))
+            mu = min(len(clusters_local[vertex_local]), len(min_weight_cluster_edges))
 
             min_weight_cluster_edges = min_weight_cluster_edges[:mu]
 
@@ -119,7 +124,10 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
             for edges in gathered_edges:
                 edges_to_add.extend(edges)
 
-            edges_to_add = sorted(edges_to_add)
+            edges_to_add = sorted(
+                edges_to_add,
+                key=lambda x: x[2]
+            )
             added_edges = []
             heaviest_edges = [False] * len(edges_to_add)
 
@@ -132,22 +140,23 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
                     heaviest_edges[edge_idx] = True
                     encountered_clusters[to_cluster] = True
 
-            for edge in edges_to_add:
+            for edge_idx, edge in enumerate(edges_to_add):
                 from_cluster = cluster_finder.get_cluster_leader(edge[0])
                 to_cluster = cluster_finder.get_cluster_leader(edge[1])
+                from_cluster_finished = cluster_finder.is_finished(from_cluster)
+                to_cluster_finished = cluster_finder.is_finished(to_cluster)
 
                 # check if dangerous
-                if cluster_finder.is_finished(to_cluster):
+                if to_cluster_finished:
                     continue
 
                 merged = cluster_finder.safe_union(from_cluster, to_cluster)
 
                 if merged:
                     added_edges.append(edge)
-                    if heaviest_edges[edge_idx]:
-                        # both finished
+                    if heaviest_edges[edge_idx] or (from_cluster_finished or to_cluster_finished):
                         cluster_finder.set_finished(from_cluster)
-                elif (not merged) and heaviest_edges[edge_idx]:
+                elif heaviest_edges[edge_idx]:
                     cluster_finder.set_finished(to_cluster)
 
             mst_edges.extend(added_edges)
@@ -169,18 +178,16 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, num_vertex_local:
         ------------------------------------------------
         '''
 
-
         clusters_local = [[] for _ in range(num_vertex_local)]
         for vertex, cluster_leader in enumerate(cluster_finder_id):
             if vertex_local_start <= cluster_leader < vertex_local_start + num_vertex_local:
                 clusters_local[cluster_leader - vertex_local_start].append(vertex)
 
-        # TODO check barrier (is necessary?) after all collective communication
         if k >= 10:
             raise Exception("k reaches 10")
 
         k += 1
-
+        
         t_end_all = MPI.Wtime()
         logs.append((t_end_all - t_start_all, mpi_time))
 

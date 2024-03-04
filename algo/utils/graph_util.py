@@ -1,25 +1,10 @@
 from typing import List
-
-import mpi4py.MPI
 from mpi4py import MPI
 
-from algo.graph import GraphLocal, Graph, DistGraphLocal
+from algo.graph import Graph, DistGraphLocal
 from algo.quick_union import QuickUnionUF
 
 class GraphUtil:
-    @staticmethod
-    def generate_graph(rank: int, comm_size: int, expected_degree: int, max_weight: int, num_vertex_local: int):
-        if rank == 0:
-            return Graph(
-                comm_size=comm_size,
-                expected_degree=expected_degree,
-                max_weight=max_weight,
-                num_vertex_local=num_vertex_local,
-                is_clique=False
-            ).generate()
-        else:
-            return None
-
     @staticmethod
     def generate_clique_graph(rank: int, comm_size: int, max_weight: int, num_vertex_local: int):
         if rank == 0:
@@ -50,7 +35,7 @@ class GraphUtil:
         return dist_graph
 
     @staticmethod
-    def get_min_weight_to_cluster_edges(graph_local: GraphLocal, cluster_finder: QuickUnionUF) -> List[List[tuple]]:
+    def get_min_weight_to_cluster_edges(graph_local: DistGraphLocal, cluster_finder: QuickUnionUF) -> List[List[tuple]]:
         # Compute the minimum-weight edge e(v, F') that connects v to (any node of) F' for all clusters F' not = F.
         vertex_local_start = graph_local.get_vertex_local_start()
         comm_size = graph_local.get_comm_size()
@@ -61,7 +46,7 @@ class GraphUtil:
 
         for vertex_from_local, edges in enumerate(vertices):
             vertex_from = vertex_from_local + vertex_local_start
-            # Dict is more efficient than list (Why?)
+            # TODO Dict is more efficient than list (Why?)
             cluster_edges = {}
             for vertex_to, weight in enumerate(edges):
                 cluster_from = cluster_finder.get_cluster_leader(vertex_from)

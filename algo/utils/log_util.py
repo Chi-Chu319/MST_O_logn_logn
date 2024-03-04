@@ -35,10 +35,11 @@ class LogUtil:
     def is_same_weight(graph: Graph, mst_seq: List[int], mst_edges_dist: List[Tuple[int, int, int]], ):
         vertices = graph.vertices
 
-        weight_sum_dist = sum([edge[2] for edge in mst_edges_dist])
-        weight_sum_seq = sum([vertices[i][mst_seq[i]] for i in range(1, graph.num_vertices)])
+        # sorted to avoid floating point precision issue in addition 
+        weight_sum_dist = sum(sorted([edge[2] for edge in mst_edges_dist]))
+        weight_sum_seq = sum(sorted([vertices[i][mst_seq[i]] for i in range(1, graph.num_vertices)]))
 
-        return weight_sum_seq == weight_sum_seq, weight_sum_seq, weight_sum_dist
+        return weight_sum_seq == weight_sum_dist and (len(mst_seq) - 1) == len(mst_edges_dist), weight_sum_seq, weight_sum_dist
 
     @staticmethod
     def log_seq_vs_dist(

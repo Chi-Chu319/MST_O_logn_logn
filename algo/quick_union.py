@@ -45,17 +45,15 @@ class QuickUnionUF:
         i = self.root(p)
         j = self.root(q)
 
-        if i == j or (self.finished[i] and self.finished[j]):
+        if i == j:
             return False
 
         if self.sz[i] < self.sz[j]:
             self.id[i] = j
             self.sz[j] += self.sz[i]
-            self.finished[j] = self.finished[j] or self.finished[i]
             return True
         else:
             self.id[j] = i
             self.sz[i] += self.sz[j]
-            self.finished[i] = self.finished[j] or self.finished[i]
             return True
 

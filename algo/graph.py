@@ -25,6 +25,9 @@ class DistGraphLocal:
     def __random_weight(self) -> float:
         return self.rng.random() * self.max_weight
 
+    def set_vertices(self, vertices: ndarray):
+        self.vertices = vertices
+
     def generate(self):
         sendbuf = [[] for _ in range(self.comm_size)]
 
@@ -39,13 +42,14 @@ class DistGraphLocal:
 
     def fill(self, recvbuf: List[List[float]]):
         for from_rank, edges in enumerate(recvbuf):
-            rank_data = recvbuf[from_rank]
+            idx = 0
+            if from_rank < self.rank:
+                continue
             for vertex_local in range(self.num_vertex_local):
-                vertex_to = vertex_local + self.num_vertex_local * from_rank
-                for vertex_from in range(0, vertex_to):
-                    idx = vertex_local * self.num_vertex_local + vertex_from
-                    self.vertices[vertex_from - self.vertex_local_start][vertex_to] = rank_data[idx]
-        # TODO fix diagonal to be sys.maxsize
+                vertex_from = vertex_local + self.num_vertex_local * from_rank
+                for vertex_to in range(self.vertex_local_start, min(vertex_from, self.vertex_local_start + self.num_vertex_local)):
+                    self.vertices[vertex_to - self.vertex_local_start][vertex_from] = edges[idx]
+                    idx += 1
 
         for vertex_local in range(self.num_vertex_local):
             vertex = vertex_local + self.vertex_local_start
@@ -70,58 +74,16 @@ class DistGraphLocal:
         result = f'rank: {self.rank}\n'
 
         for i, edges in enumerate(self.vertices):
-            result += f'Vertex: {i + self.vertex_local_start}\n'
+            result += '\n'
             for edge in edges:
-                result += f'{str(edge)}\n'
+                result += f'{str(edge)} '
 
         return result
-
-class GraphLocal:
-    def __init__(
-            self,
-            comm_size: int,
-            rank: int,
-            num_vertex_local: int,
-            vertices: List[List[float]]
-            #         TODO convert vertices to np arrays
-    ):
-        self.rank = rank
-        self.comm_size = comm_size
-        self.num_vertex_local = num_vertex_local
-        self.num_vertices = self.comm_size * self.num_vertex_local
-        self.vertices = vertices
-        self.vertex_local_start = rank * num_vertex_local
-
-    def get_vertex_local_start(self) -> int:
-        return self.vertex_local_start
-
-    def get_num_vertex_local(self) -> int:
-        return self.num_vertex_local
-
-    def get_vertices(self) -> List[List[float]]:
-        return self.vertices
-
-    def get_comm_size(self) -> int:
-        return self.comm_size
-
-    def get_vertex_machine(self, vertex: int) -> int:
-        return vertex // self.num_vertex_local
-
-    def __str__(self) -> str:
-        result = f'rank: {self.rank}\n'
-
-        for i, edges in enumerate(self.vertices):
-            result += f'Vertex: {i + self.vertex_local_start}\n'
-            for edge in edges:
-                result += f'{str(edge)}\n'
-
-        return result
-
 
 class Graph:
     def __init__(self, comm_size: int, num_vertex_local: int, expected_degree: int, max_weight: int,
                  is_clique: bool) -> None:
-        self.rng = np.random.default_rng()
+        self.rng = np.random.default_rng(18)
 
         self.comm_size = comm_size
         self.num_vertex_local = num_vertex_local
@@ -149,16 +111,19 @@ class Graph:
     def __random_weight(self) -> float:
         return self.rng.random() * self.max_weight
 
-    def split(self) -> List[GraphLocal]:
+    def split(self) -> List[DistGraphLocal]:
         result = []
 
         for i in range(self.comm_size):
-            result.append(GraphLocal(
+            graph_local = DistGraphLocal(
                 rank=i,
                 comm_size=self.comm_size,
                 num_vertex_local=self.num_vertex_local,
-                vertices=self.vertices[i * self.num_vertex_local: (i + 1) * self.num_vertex_local]
-            ))
+                max_weight=self.max_weight,
+            )
+            graph_local.set_vertices(self.vertices[i * self.num_vertex_local: (i + 1) * self.num_vertex_local])
+
+            result.append(graph_local)
 
         return result
 
@@ -166,8 +131,8 @@ class Graph:
         result = ""
 
         for i, edges in enumerate(self.vertices):
-            result += f'Vertex: {i}\n'
+            result += '\n'
             for edge in edges:
-                result += f'{str(edge)}\n'
+                result += f'{str(edge)} '
 
         return result
