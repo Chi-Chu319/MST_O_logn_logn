@@ -152,11 +152,11 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, graph_local: Dist
 
                 merged = cluster_finder.safe_union(from_cluster, to_cluster)
 
-                if merged:
-                    added_edges.append(edge)
-                    if heaviest_edges[edge_idx] or (from_cluster_finished or to_cluster_finished):
-                        cluster_finder.set_finished(from_cluster)
-                elif heaviest_edges[edge_idx]:
+                if heaviest_edges[edge_idx]:
+                    cluster_finder.set_finished(to_cluster)
+
+                if merged and (from_cluster_finished or to_cluster_finished):
+                    cluster_finder.set_finished(from_cluster)
                     cluster_finder.set_finished(to_cluster)
 
             mst_edges.extend(added_edges)
@@ -168,7 +168,7 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, graph_local: Dist
         '''
         ------------------------------------------------
         '''
-        # TODO bcast does not comply with the congest clique model as it sends nlogn count. change to scatter and all to all later
+        # TODO bcast does not comply with the congest clique model as it sends nlogn count. change to scatter and all to all if needed
         t_start = MPI.Wtime()
         num_cluster = comm.bcast(num_cluster, root=0)
         cluster_finder_id = comm.bcast(cluster_finder_id, root=0)
