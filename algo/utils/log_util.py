@@ -11,7 +11,7 @@ class LogUtil:
                       t_start_dist: float,
                       t_end_dist: float, logs_dist: List[Tuple[float, int]]):
         """Seq time, dist time, total seq time, total dist time"""
-        t_dist_seq = sum([logs_dist[i][0] for i in range(len(logs_dist))])
+        t_dist_all = sum([logs_dist[i][0] for i in range(len(logs_dist))])
         t_dist_mpi = sum([logs_dist[i][1] for i in range(len(logs_dist))])
 
         t_dist = t_end_dist - t_start_dist

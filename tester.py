@@ -47,11 +47,10 @@ def seq_vs_dist(comm: MPI.Intracomm, graph: Graph, rank: int, size: int, num_ver
     return graph, t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist
 
 
-def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
+def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, k_max: int, filename: str):
     data = {}
 
     k = 0
-    k_max = 8
     i = 2
     while k <= k_max:
         num_vertex_local = i
@@ -97,11 +96,10 @@ def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
         print(df)
 
 
-def range_dist(comm: MPI.Intracomm, rank: int, size: int, filename: str):
+def range_dist(comm: MPI.Intracomm, rank: int, size: int, k_max: int, filename: str):
     data = {}
 
     k = 0
-    k_max = 10
     i = 2
     while k <= k_max:
         num_vertex_local = i

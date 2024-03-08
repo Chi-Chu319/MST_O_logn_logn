@@ -5,7 +5,6 @@ import sys
 def __min_weight(graph, min_weights, in_mst):
     """Min weight vertex to the current MST, for any v not in the MST"""
     min_weight = sys.maxsize
-
     min_index = -1
 
     for v in range(graph.num_vertices):
