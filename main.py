@@ -21,7 +21,7 @@ range_dist(
     rank=rank,
     size=size,
     k_max=11,
-    filename="dist_n1_t8"
+    filename="dist_n4_t8"
 )
 
 # range_seq_vs_dist(
