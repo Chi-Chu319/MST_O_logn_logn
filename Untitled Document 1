@@ -1,0 +1,38 @@
+Traceback (most recent call last):
+  File "/users/wutianxi/MST_O_logn_logn/main.py", line 57, in <module>
+    graph_local=GraphUtil.generate_distribute_clique_graph(
+  File "/users/wutianxi/MST_O_logn_logn/algo/utils/graph_util.py", line 31, in generate_distribute_clique_graph
+    recvbuf = comm.alltoall(sendbuf)
+  File "mpi4py/MPI/Comm.pyx", line 1603, in mpi4py.MPI.Comm.alltoall
+  File "mpi4py/MPI/msgpickle.pxi", line 903, in mpi4py.MPI.PyMPI_alltoall
+  File "mpi4py/MPI/msgpickle.pxi", line 165, in mpi4py.MPI.pickle_dumpv
+  File "mpi4py/MPI/msgpickle.pxi", line 147, in mpi4py.MPI.pickle_dump
+  File "mpi4py/MPI/msgbuffer.pxi", line 50, in mpi4py.MPI.downcast
+OverflowError: integer 2416787811 does not fit in 'int'
+
+Traceback (most recent call last):
+  File "/users/wutianxi/MST_O_logn_logn/main.py", line 65, in <module>
+    mst_edges_dist, k_dist, logs_dist = mst_distributed(
+  File "/users/wutianxi/MST_O_logn_logn/algo/mst_distributed.py", line 78, in mst_distributed
+    t_start = MPI.Wtime()
+  File "mpi4py/MPI/Comm.pyx", line 1603, in mpi4py.MPI.Comm.alltoall
+  File "mpi4py/MPI/msgpickle.pxi", line 904, in mpi4py.MPI.PyMPI_alltoall
+Traceback (most recent call last):
+  File "/users/wutianxi/MST_O_logn_logn/main.py", line 65, in <module>
+  File "mpi4py/MPI/msgpickle.pxi", line 909, in mpi4py.MPI.PyMPI_alltoall
+  File "mpi4py/MPI/msgpickle.pxi", line 191, in mpi4py.MPI.pickle_allocv
+  File "mpi4py/MPI/msgpickle.pxi", line 182, in mpi4py.MPI.pickle_alloc
+SystemError: Negative size passed to PyBytes_FromStringAndSize
+    mst_edges_dist, k_dist, logs_dist = mst_distributed(
+  File "/users/wutianxi/MST_O_logn_logn/algo/mst_distributed.py", line 78, in mst_distributed
+    t_start = MPI.Wtime()
+  File "mpi4py/MPI/Comm.pyx", line 1603, in mpi4py.MPI.Comm.alltoall
+  File "mpi4py/MPI/msgpickle.pxi", line 904, in mpi4py.MPI.PyMPI_alltoall
+  File "mpi4py/MPI/msgpickle.pxi", line 909, in mpi4py.MPI.PyMPI_alltoall
+  File "mpi4py/MPI/msgpickle.pxi", line 191, in mpi4py.MPI.pickle_allocv
+  File "mpi4py/MPI/msgpickle.pxi", line 182, in mpi4py.MPI.pickle_alloc
+SystemError: Negative size passed to PyBytes_FromStringAndSize
+slurmstepd: error: *** JOB 20733295 ON r02c26 CANCELLED AT 2024-03-10T06:20:17 ***
+srun: Job step aborted: Waiting up to 62 seconds for job step to finish.
+slurmstepd: error: *** STEP 20733295.0 ON r02c26 CANCELLED AT 2024-03-10T06:20:17 ***
+
