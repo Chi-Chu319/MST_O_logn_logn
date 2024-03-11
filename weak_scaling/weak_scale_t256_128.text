@@ -1,0 +1,21 @@
+[
+  (0.292364772, 0.13090022500000004, 0.08008924, 0, 0, 0, 0.05081098500000003),
+  (14.133286533, 7.839406856000002, 0, 2.8362623130000006, 4.956060005000001, 0.04354588999999898, 0.0035386480000010323),
+  (6.243241450999999, 1.4333967120000004, 0, 0.3423574719999998, 1.0563972300000017, 0.03281109599999965, 0.0018309139999992396)
+]
+Job ID: 20752984
+Cluster: puhti
+User/Group: wutianxi/pepr_wutianxi
+State: COMPLETED (exit code 0)
+Nodes: 8
+Cores per node: 32
+CPU Utilized: 02:09:58
+CPU Efficiency: 64.81% of 03:20:32 core-walltime
+Job Wall-clock time: 00:00:47
+Memory Utilized: 88.04 GB (estimated maximum)
+Memory Efficiency: 8.60% of 1.00 TB (4.00 GB/core)
+Job consumed 4.68 CSC billing units based on following used resources
+Billed project: project_2009665
+CPU BU: 3.34
+Mem BU: 1.34
+bash: PS1: command not found

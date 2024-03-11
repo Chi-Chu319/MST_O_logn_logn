@@ -2,10 +2,10 @@
 #SBATCH --job-name=mpiTest
 #SBATCH --account=project_2009665
 #SBATCH --time=02:00:00
-#SBATCH --nodes=4
-#SBATCH --ntasks-per-node=8
-#SBATCH --mem-per-cpu=24G
+#SBATCH --nodes=8
+#SBATCH --ntasks-per-node=32
+#SBATCH --mem-per-cpu=4G
 #SBATCH --output=mst_result.out
 #SBATCH --partition=large
 
-time srun python3 main.py 256 1000 10
+time srun python3 main.py 128 1000 10
