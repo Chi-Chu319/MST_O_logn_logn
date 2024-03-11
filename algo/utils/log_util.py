@@ -6,6 +6,20 @@ from algo.graph import Graph
 
 class LogUtil:
     @staticmethod
+    def validate_tree(mst_seq: List[int]):
+        num_vertices = len(mst_seq)
+        for v in range(num_vertices):
+            counter= 0
+            parent = v
+            while not parent == 0:
+                parent = mst_seq[parent]
+                counter += 1
+                if counter >= num_vertices:
+                    return False
+
+            return True 
+
+    @staticmethod
     def seq_dist_time(t_start_seq: float,
                       t_end_seq: float,
                       t_start_dist: float,

@@ -76,6 +76,9 @@ def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, k_max: int, fil
                 print(f"weight_sum_seq: {weight_sum_seq}, tree size: {len(mst_seq) - 1}")
                 print(f"weight_sum_dist: {weight_sum_dist}, tree size: {len(mst_edges_dist)}")
 
+            if not LogUtil.validate_tree(mst_seq=mst_seq):
+                print("Not a valid tree!")
+
             t_seq, t_dist, t_dist_seq, t_dist_mpi = LogUtil.seq_dist_time(
                 t_start_seq=t_start_seq,
                 t_end_seq=t_end_seq,
@@ -128,6 +131,9 @@ def range_dist(comm: MPI.Intracomm, rank: int, size: int, k_max: int, filename: 
 
         i = i * 2
         k += 1
+
+        if rank == 0:
+            print(logs_dist)
 
     if rank == 0:
         df = pd.DataFrame.from_dict(data, orient='index',
