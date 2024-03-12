@@ -77,6 +77,6 @@ if rank == 0:
     f = open("weak_scaling/weak_scale.csv", "a")
     f.write(f"{t_dist_all}, {t_dist_all - t_dist_mpi}, {t_dist_mpi}, {num_proc}, {num_vertex_local}\n")
     f.close()
-    f = open(f"weak_scaling/weak_scale_t{num_proc}_{num_vertex_local}.text", "a")
+    f = open(f"weak_scaling/weak_scale_t{num_proc}_{num_vertex_local}.txt", "a")
     f.write(str(logs_dist))
     f.close()
