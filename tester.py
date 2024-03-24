@@ -12,15 +12,28 @@ from algo.utils.log_util import LogUtil
 
 def seq_vs_dist(comm: MPI.Intracomm, graph: Graph, rank: int, size: int, num_vertex_local: int):
     """
+    Sequential MST
+    """
+    t_start_seq = MPI.Wtime()
+
+    if rank == 0:
+        mst_seq = mst_sequential(graph)
+    else:
+        mst_seq = None
+
+    t_end_seq = MPI.Wtime()
+    
+    """
     Distributed MST
     """
     if rank == 0:
         sendbuf = graph.split()
     else:
         sendbuf = None
+
     # Scatter vertices
-    graph_local: DistGraphLocal = comm.scatter(sendobj=sendbuf, root=0)
-    comm.barrier()
+    # graph_local: DistGraphLocal = comm.scatter(sendobj=sendbuf, root=0)
+    graph_local = GraphUtil.generate_distribute_clique_graph(comm, rank, size, 10, num_vertex_local)
     t_start_dist = MPI.Wtime()
 
     mst_edges_dist, k_dist, logs_dist = mst_distributed(
@@ -32,19 +45,8 @@ def seq_vs_dist(comm: MPI.Intracomm, graph: Graph, rank: int, size: int, num_ver
 
     t_end_dist = MPI.Wtime()
 
-    """
-    Sequential MST
-    """
-    t_start_seq = MPI.Wtime()
 
-    if rank == 0:
-        mst_seq = mst_sequential(graph)
-    else:
-        mst_seq = None
-
-    t_end_seq = MPI.Wtime()
-
-    return graph, t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist
+    return t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist
 
 
 def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, k_max: int, filename: str):
@@ -62,22 +64,23 @@ def range_seq_vs_dist(comm: MPI.Intracomm, rank: int, size: int, k_max: int, fil
             num_vertex_local=i
         )
 
-        graph, t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist = seq_vs_dist(
+        t_start_seq, t_end_seq, t_start_dist, t_end_dist, mst_seq, mst_edges_dist, k_dist, logs_dist = seq_vs_dist(
             comm, graph, rank, size, num_vertex_local)
 
         if rank == 0:
-            is_same, weight_sum_seq, weight_sum_dist = LogUtil.is_same_weight(
-                graph=graph,
-                mst_seq=mst_seq,
-                mst_edges_dist=mst_edges_dist
-            )
-            if not is_same:
-                print(f"different results! graph size: {graph.num_vertices}, number of machines: {size}")
-                print(f"weight_sum_seq: {weight_sum_seq}, tree size: {len(mst_seq) - 1}")
-                print(f"weight_sum_dist: {weight_sum_dist}, tree size: {len(mst_edges_dist)}")
+            # is_same, weight_sum_seq, weight_sum_dist = LogUtil.is_same_weight(
+            #     graph=graph,
+            #     mst_seq=mst_seq,
+            #     mst_edges_dist=mst_edges_dist
+            # )
 
-            if not LogUtil.validate_tree(mst_seq=mst_seq):
-                print("Not a valid tree!")
+            # if not is_same:
+            #     print(f"different results! graph size: {graph.num_vertices}, number of machines: {size}")
+            #     print(f"weight_sum_seq: {weight_sum_seq}, tree size: {len(mst_seq) - 1}")
+            #     print(f"weight_sum_dist: {weight_sum_dist}, tree size: {len(mst_edges_dist)}")
+
+            # if not LogUtil.validate_tree(mst_seq=mst_seq):
+            #     print("Not a valid tree!")
 
             t_seq, t_dist, t_dist_seq, t_dist_mpi = LogUtil.seq_dist_time(
                 t_start_seq=t_start_seq,

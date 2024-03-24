@@ -96,8 +96,6 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, graph_local: Dist
 
             sendbuf_from_clusters = [[] for _ in range(size)]
 
-            guardian_cluster_edges = []
-
             for vertex_local, cluster_edges in enumerate(clusters_edges):
                 if len(cluster_edges) == 0:
                     continue
