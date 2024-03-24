@@ -62,6 +62,7 @@ range_seq_vs_dist(
 #   num_vertex_local=num_vertex_local
 # )
 
+<<<<<<< HEAD
 # mst_edges_dist, k_dist, logs_dist = mst_distributed(
 #     comm=comm,
 #     rank=rank,
@@ -80,3 +81,23 @@ range_seq_vs_dist(
 #     f = open(f"weak_scaling/weak_scale_t{num_proc}_{num_vertex_local}.txt", "a")
 #     f.write(str(logs_dist))
 #     f.close()
+=======
+mst_edges_dist, k_dist, logs_dist = mst_distributed(
+    comm=comm,
+    rank=rank,
+    size=size,
+    graph_local=graph_local
+)
+if rank == 0:
+    num_proc = 256
+    num_vertex_local = 128
+    t_dist_all = sum([logs_dist[i][0] for i in range(len(logs_dist))])
+    t_dist_mpi = sum([logs_dist[i][1] for i in range(len(logs_dist))])
+    print(f"{t_dist_all}, {t_dist_all - t_dist_mpi}, {t_dist_mpi}")
+    f = open("strong_scaling/strong_scale.csv", "a")
+    f.write(f"{t_dist_all}, {t_dist_all - t_dist_mpi}, {t_dist_mpi}, {num_proc}, {num_vertex_local}\n")
+    f.close()
+    f = open(f"strong_scaling/strong_scale_t{num_proc}_{num_vertex_local}.txt", "a")
+    f.write(str(logs_dist))
+    f.close()
+>>>>>>> f1e318106aa89bc24d1111f3195f25aacf0a8ece
