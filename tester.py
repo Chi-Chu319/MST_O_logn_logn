@@ -130,7 +130,7 @@ def range_dist(comm: MPI.Intracomm, rank: int, size: int, k_max: int, filename: 
 
         t_dist, t_dist_seq, t_dist_mpi = LogUtil.dist_time(t_start_dist, t_end_dist, logs_dist)
 
-        data[str(k)] = (t_dist, t_dist_seq, t_dist_mpi, k_dist)
+        data[str(k)] = (t_dist, t_dist_seq, t_dist_mpi, k_dist, graph_local.num_vertices)
 
         i = i * 2
         k += 1
@@ -140,6 +140,6 @@ def range_dist(comm: MPI.Intracomm, rank: int, size: int, k_max: int, filename: 
 
     if rank == 0:
         df = pd.DataFrame.from_dict(data, orient='index',
-                                    columns=['t_dist', 't_dist_seq', 't_dist_mpi', 'k_dist'])
+                                    columns=['t_dist', 't_dist_seq', 't_dist_mpi', 'k_dist', 'num_vertices'])
         df.to_csv(f"{filename}.csv")
         print(df)
