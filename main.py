@@ -62,7 +62,7 @@ graph_local=GraphUtil.generate_distribute_clique_graph(
   rank=rank,
   comm_size=size,
   max_weight=max_weight,
-  num_vertex_local=num_vertex_local
+  num_vertex_local=4096
 )
 
 mst_edges_dist, k_dist, logs_dist = mst_distributed(
