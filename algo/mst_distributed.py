@@ -96,8 +96,6 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, graph_local: Dist
 
             sendbuf_from_clusters = [[] for _ in range(size)]
 
-            leader_cluster_edges = []
-
             for vertex_local, cluster_edges in enumerate(clusters_edges):
                 if len(cluster_edges) == 0:
                     continue
@@ -113,38 +111,36 @@ def mst_distributed(comm: MPI.Intracomm, size: int, rank: int, graph_local: Dist
 
                 min_weight_cluster_edges = min_weight_cluster_edges[:mu]
 
-                leader_cluster_edges.extend(min_weight_cluster_edges)
-
                 # Scatter the edges from each cluster leader to cluster members
-                # for cluster_vertex_idx, cluster_vertex in enumerate(clusters_local[vertex_local]):
-                #     if cluster_vertex_idx < len(min_weight_cluster_edges):
-                #         edge = min_weight_cluster_edges[cluster_vertex_idx]
-                #         sendbuf_from_clusters[graph_local.get_vertex_machine(cluster_vertex)].append(edge)
+                for cluster_vertex_idx, cluster_vertex in enumerate(clusters_local[vertex_local]):
+                    if cluster_vertex_idx < len(min_weight_cluster_edges):
+                        edge = min_weight_cluster_edges[cluster_vertex_idx]
+                        sendbuf_from_clusters[graph_local.get_vertex_machine(cluster_vertex)].append(edge)
 
             # comm2
-            # '''
-            # ------------------------------------------------
-            # '''
-            # t_start = MPI.Wtime()
-            # recvbuf_from_clusters = comm.alltoall(sendbuf_from_clusters)
-            # t_end = MPI.Wtime()
-            # t_comm2 += t_end - t_start
-            # '''
-            # ------------------------------------------------
-            # '''
+            '''
+            ------------------------------------------------
+            '''
+            t_start = MPI.Wtime()
+            recvbuf_from_clusters = comm.alltoall(sendbuf_from_clusters)
+            t_end = MPI.Wtime()
+            t_comm2 += t_end - t_start
+            '''
+            ------------------------------------------------
+            '''
 
             # Step 3
             # Each cluster member send edges to v_0
-            # guardian_cluster_edges = []
-            # for edges in recvbuf_from_clusters:
-            #     guardian_cluster_edges.extend(edges)
+            guardian_cluster_edges = []
+            for edges in recvbuf_from_clusters:
+                guardian_cluster_edges.extend(edges)
 
             # comm3
             '''
             ------------------------------------------------
             '''
             t_start = MPI.Wtime()
-            gathered_edges = comm.gather(leader_cluster_edges, root=0)
+            gathered_edges = comm.gather(guardian_cluster_edges, root=0)
             t_end = MPI.Wtime()
             t_comm3 += t_end - t_start
             '''
